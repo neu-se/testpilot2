@@ -17,7 +17,7 @@
     "pretest": "npm run build",
     "test": "ts-mocha --forbid-only -p test/tsconfig.json test/*.ts",
     "autoformat": "prettier --write src/*.ts test typings benchmark examples",
-    "autoformat:check": "prettier --check src test/*.ts typings benchmark/*.ts examples/*.ts",
+    "autoformat:check": "prettier --check src/*.ts test/*.ts typings benchmark/*.ts examples/*.ts",
     "prepack": "npm run build"
   },
   "devDependencies": {
