@@ -2,6 +2,8 @@ import dedent from "dedent";
 import { APIFunction, sanitizePackageName } from "./exploreAPI";
 import { TestOutcome, TestStatus } from "./report";
 import { closeBrackets, commentOut, trimAndCombineDocComment } from "./syntax";
+import handlebars from "handlebars";
+import fs from "fs";
 
 /**
  * A strategy object for refining a prompt based on the outcome of a test
@@ -28,6 +30,10 @@ type PromptOptions = {
   includeDocComment: boolean;
   /** Whether to include the function's body in the prompt. */
   includeFunctionBody: boolean;
+  /** Template file used to generate prompts for chat model */
+  templateFileName?: string;
+  /** Template file used to generate prompts when errors occur */
+  retryTemplateFileName?: string;
 };
 
 export function defaultPromptOptions(): PromptOptions {
@@ -90,10 +96,10 @@ export class Prompt {
             let assert = require('assert');
             let ${sanitizedPackageName} = require('${fun.packageName}');\n`;
 
-    this.signature = commentOut(fun.signature);
+    this.signature = fun.signature;
 
     if (options.includeFunctionBody) {
-      this.functionBody = commentOut(fun.descriptor.implementation);
+      this.functionBody = fun.descriptor.implementation;
     } else {
       this.functionBody = "";
     }
@@ -120,8 +126,7 @@ export class Prompt {
       return this.usageSnippets
         .map((snippet, index) => {
           const lines = snippet.split("\n");
-          const commentedLines = lines.map((line) => `// ${line}\n`);
-          return `// usage #${index + 1}\n` + commentedLines.join("");
+          return `// usage #${index + 1}\n` + lines.join("") + "\n";
         })
         .join("");
     }
@@ -132,15 +137,41 @@ export class Prompt {
    * representation.
    */
   public assemble(): string {
-    return (
-      this.imports +
-      this.assembleUsageSnippets() +
-      this.docComment +
-      this.signature +
-      this.functionBody +
-      this.suiteHeader +
-      this.testHeader
-    );
+    // return this.embedInTemplate(this.signature, this.functionBody, this.docComment, this.assembleUsageSnippets(),
+    const signature = this.signature;
+    const functionBody = this.functionBody;
+    const docComments = this.docComment;
+    const snippets = this.assembleUsageSnippets();
+    const headers = this.imports + this.suiteHeader + this.testHeader;
+ 
+    const templateFileName = this.options.templateFileName;
+    const template = fs.readFileSync(templateFileName!, "utf8");
+    const compiledTemplate = handlebars.compile(template);
+    let expandedTemplate = compiledTemplate({ 
+      signature: signature.trim(), 
+      docComments: docComments ? docComments : "",
+      functionBody: functionBody ? `This function is defined as follows:\n\`\`\`\n${functionBody.trim()}\n\`\`\`` : "",
+      snippets: snippets ? `You may use the following examples to guide your implementation:\n\`\`\`\n${snippets}\n\`\`\`` : "",
+      code: headers });
+    while (expandedTemplate.includes('\n\n\n')){ // avoid unnecessary blank lines
+      expandedTemplate = expandedTemplate.replace('\n\n\n','\n\n');
+    }
+    while (expandedTemplate.includes('\`\`\`\n\n')){ // avoid empty lines at the beginning of fenced code blocks
+      expandedTemplate = expandedTemplate.replace('\`\`\`\n\n','\`\`\`\n');
+    }
+    while (expandedTemplate.includes('\n\n\`\`\`')){ // avoid empty lines at the end of fenced code blocks
+      expandedTemplate = expandedTemplate.replace('\n\n\`\`\`','\n\`\`\`');
+    }
+    if (expandedTemplate.includes('Please')){
+      expandedTemplate = expandedTemplate.replace('Please', '\nPlease'); // start new paragraph for the instructions
+    }
+    if (expandedTemplate.includes('This function')){
+      expandedTemplate = expandedTemplate.replace('This function', '\nThis function'); // start new paragraph for the function body
+    }
+    if (expandedTemplate.includes('You may use')){
+      expandedTemplate = expandedTemplate.replace('You may use', '\nYou may use'); // start new paragraph for the examples
+    }
+    return expandedTemplate;
   }
 
   /**
@@ -151,20 +182,62 @@ export class Prompt {
     body: string,
     stubOutHeaders: boolean = true
   ): string | undefined {
-    let fixed = closeBrackets(
-      this.imports +
-        (stubOutHeaders
-          ? // stub out suite header and test header so we don't double-count identical tests
-            "describe('test suite', function() {\n" +
-            "    it('test case', function(done) {\n"
-          : this.suiteHeader + this.testHeader) +
-        // add the body, making sure the first line is indented correctly
-        body.replace(/^(?=\S)/, " ".repeat(8)) +
-        "\n"
-    );
+
+    let code = "";
+
+    // add imports if first line of body does not contain "require"
+    const line = body.split('\n')[0];
+    if (line.indexOf('require') === -1){
+      code += this.imports + '\n';
+    }  
+
+    // add headers if they are not already in the body
+    if (!body.includes("describe(")){
+      code = code +
+         (stubOutHeaders
+           ? // stub out suite header and test header so we don't double-count identical tests
+             "describe('test suite', function() {\n" +
+             "    it('test case', function(done) {\n"
+           : this.suiteHeader + this.testHeader) +
+         // add the body, making sure the first line is indented correctly
+         body.trim().replace(/^(?=\S)/, " ".repeat(8)) +
+         "\n";
+    } else { // only add the body if it already includes test/suite headers
+      code += body;
+    }
+    
+    // close brackets
+    const fixed = closeBrackets(code);
+
     // beautify closing brackets
-    return fixed?.source.replace(/\}\)\}\)$/, "    })\n})");
+    const beautified = fixed?.source.replace(/\}\)\}\)$/, "    })\n})");
+    return beautified;
   }
+
+  // public embedInTemplate(signature: string, functionBody: string, docComments: string, snippets: string, body: string): string {
+  //   const templateFileName = this.options.templateFileName;
+  //   const template = fs.readFileSync(templateFileName!, "utf8");
+  //   const compiledTemplate = handlebars.compile(template);
+  //   let expandedTemplate = compiledTemplate({ 
+  //     signature: signature.trim(), 
+  //     docComments: docComments ? docComments : "",
+  //     functionBody: functionBody ? `This function is defined as follows:\n\`\`\`\n${functionBody.trim()}\n\`\`\`` : "",
+  //     snippets: snippets ? `You may use the following examples to guide your implementation:\n\`\`\`\n${snippets}\n\`\`\`` : "",
+  //     code: body });
+  //   while (expandedTemplate.includes('\n\n\n')){ // avoid unnecessary blank lines
+  //     expandedTemplate = expandedTemplate.replace('\n\n\n','\n\n');
+  //   }
+  //   while (expandedTemplate.includes('\`\`\`\n\n')){ // avoid empty lines at the beginning of fenced code blocks
+  //     expandedTemplate = expandedTemplate.replace('\`\`\`\n\n','\`\`\`\n');
+  //   }
+  //   while (expandedTemplate.includes('\n\n\`\`\`')){ // avoid empty lines at the end of fenced code blocks
+  //     expandedTemplate = expandedTemplate.replace('\n\n\`\`\`','\n\`\`\`');
+  //   }
+  //   if (expandedTemplate.includes('Please')){
+  //     expandedTemplate = expandedTemplate.replace('Please', '\nPlease'); // start new paragraph for the instructions
+  //   }
+  //   return expandedTemplate;
+  // }
 
   public withProvenance(...provenanceInfos: PromptProvenance[]): Prompt {
     this.provenance.push(...provenanceInfos);
@@ -245,7 +318,7 @@ export class DocCommentIncluder implements IPromptRefiner {
 
 export class RetryPrompt extends Prompt {
   constructor(
-    prev: Prompt,
+    private prev: Prompt,
     private body: string,
     private readonly err: string
   ) {
@@ -253,25 +326,12 @@ export class RetryPrompt extends Prompt {
   }
 
   public assemble() {
-    const rawFailingTest = super.assemble() + this.body + "\n";
-    const completedFailingTest = closeBrackets(rawFailingTest);
-    let failingTest;
-    if (completedFailingTest) {
-      failingTest = completedFailingTest.source.replace(
-        /\}\)\}\)$/,
-        "    })\n"
-      );
-    } else {
-      failingTest = rawFailingTest + "    })\n";
-    }
-
-    return (
-      failingTest +
-      "    // the test above fails with the following error:\n" +
-      `    //   ${this.err}\n` +
-      "    // fixed test:\n" +
-      this.testHeader
-    );
+    const rawFailingTest = this.prev.completeTest(this.body);
+    const templateFileName = this.options.retryTemplateFileName;
+    const template = fs.readFileSync(templateFileName!, "utf8");
+    const compiledTemplate = handlebars.compile(template);
+    const expandedTemplate = compiledTemplate({ test: rawFailingTest, error: this.err });
+    return expandedTemplate;
   }
 }
 

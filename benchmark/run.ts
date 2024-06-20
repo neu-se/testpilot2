@@ -3,7 +3,6 @@ import path from "path";
 import { performance } from "perf_hooks";
 import {
   APIFunction,
-  Codex,
   exploreAPI,
   FunctionDescriptor,
   getDocSnippets,
@@ -14,6 +13,7 @@ import {
   TestGenerator,
   TestValidator,
 } from "..";
+import { ChatModel } from "../src/chatmodel";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { PerformanceMeasurer } from "./performanceMeasurer";
@@ -35,6 +35,8 @@ export async function runExperiment(
   temperatures: number[],
   snippetMap: Map<string, string[]>,
   model: ICompletionModel,
+  templateFileName: string,
+  retryTemplateFileName: string,
   validator: TestValidator,
   collector: TestResultCollector,
   timeLimit: number
@@ -44,6 +46,8 @@ export async function runExperiment(
     temperatures,
     (fn) => snippetMap.get(fn),
     model,
+    templateFileName,
+    retryTemplateFileName,
     validator,
     collector
   );
@@ -136,10 +140,22 @@ if (require.main === module) {
         },
         model: {
           type: "string",
-          choices: ["gpt", "starcoder"],
-          default: "gpt",
+          demandOption: true,
+          default: "llama-3-70b-instruct",
           description: "LLM api to use",
         },
+        template: {
+          type: "string",
+          demandOption: true,
+          default: "./templates/template.hb",
+          description: "Handlebars template file to use",
+        },
+        retryTemplate: {
+          type: "string",
+          demandOption: true,
+          default: "./templates/retry-template.hb",
+          description: "Handlebars template file to use",
+        }
       });
     const argv = await parser.argv;
 
@@ -150,7 +166,7 @@ if (require.main === module) {
           "Warning: --strictResponses has no effect when not using --responses"
         );
       }
-      model = new Codex(argv.model === "starcoder", { n: argv.numCompletions });
+      model = new ChatModel(argv.model);
     } else {
       model = MockCompletionModel.fromFile(
         argv.responses,
@@ -269,6 +285,8 @@ if (require.main === module) {
         argv.temperatures.split(/\s+/).map(parseFloat),
         allSnippets,
         model,
+        argv.template,
+        argv.retryTemplate,
         validator,
         collector,
         argv.timeLimit * 1000

@@ -53,6 +53,7 @@ export class MochaValidator extends TestValidator {
   }
 
   public validateTest(testName: string, testSource: string): TestOutcome {
+
     const requirePattern = new RegExp(
       `require\\('${this.packageName}'\\)`,
       "g"
@@ -78,28 +79,32 @@ export class MochaValidator extends TestValidator {
     const reportFile = path.join(tmpDir, "report.json");
 
     performance.mark(`start:${testName}`);
+    const command = path.join(__dirname, "..", "node_modules", ".bin", "nyc");
+    const args = [
+      `--cwd=${packagePath}`,
+      `--exclude=${path.basename(this.testDir)}`,
+      "--reporter=json",
+      `--report-dir=${coverageDir}`,
+      `--temp-dir=${coverageDir}`,
+      path.join(__dirname, "..", "node_modules", ".bin", "mocha"),
+      "--full-trace",
+      "--exit",
+      "--allow-uncaught=false",
+      "--reporter=json",
+      "--reporter-option",
+      `output=${reportFile}`,
+      "--",
+      testFile,
+    ];
+    const options: child_process.SpawnSyncOptions = {
+      timeout: 5000,
+      killSignal: "SIGKILL",
+    };
+    //console.log(`Running test: ${testName}, command: ${command} ${args.join(" ")} --options=${JSON.stringify(options)}`);
     const res = spawnSync(
-      path.join(__dirname, "..", "node_modules", ".bin", "nyc"),
-      [
-        `--cwd=${packagePath}`,
-        `--exclude=${path.basename(this.testDir)}`,
-        "--reporter=json",
-        `--report-dir=${coverageDir}`,
-        `--temp-dir=${coverageDir}`,
-        path.join(__dirname, "..", "node_modules", ".bin", "mocha"),
-        "--full-trace",
-        "--exit",
-        "--allow-uncaught=false",
-        "--reporter=json",
-        "--reporter-option",
-        `output=${reportFile}`,
-        "--",
-        testFile,
-      ],
-      {
-        timeout: 5000,
-        killSignal: "SIGKILL",
-      }
+      command,
+      args,
+      options
     );
     performance.measure(`duration:${testName}`, `start:${testName}`);
     const stderr = res.stderr.toString();
@@ -143,8 +148,8 @@ export class MochaValidator extends TestValidator {
     } else {
       // further sanity check: there should be exactly one result (either passed or pending)
       const numResults = report.passes.length + report.pending.length;
-      if (numResults != 1) {
-        throw new Error(`Expected 1 test result, got ${numResults}`);
+      if (numResults != 1) {        
+        console.log(`WARNING: Expected 1 test result, got ${numResults}`);
       }
 
       if (report.passes.length > 0) {

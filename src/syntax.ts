@@ -44,7 +44,7 @@ export function closeBrackets(
   }
   try {
     const ast = espree.parse(code + brackets, { ecmaVersion: "latest" });
-    return { source: code + brackets, ast };
+    return { source: (code + brackets).trim(), ast };
   } catch (err) {}
   return undefined;
 }

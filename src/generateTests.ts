@@ -13,6 +13,7 @@ import { ITestInfo, TestOutcome, TestStatus } from "./report";
 import { SnippetMap } from "./snippetHelper";
 import { ITestResultCollector } from "./testResultCollector";
 import { TestValidator } from "./testValidator";
+import * as fs from "fs";
 
 /**
  * Context class collecting various bits of information needed for test
@@ -30,6 +31,8 @@ export class TestGenerator {
     private temperatures: number[],
     private snippetMap: SnippetMap,
     private model: ICompletionModel,
+    private templateFileName: string,
+    private retryTemplateFileName: string,
     private validator: TestValidator,
     private collector: ITestResultCollector
   ) {}
@@ -42,7 +45,12 @@ export class TestGenerator {
       let generatedPassingTests = false;
       const generatedPrompts = new Map<string, Prompt>();
       const snippets = this.snippetMap(fun.functionName) ?? [];
-      const worklist = [new Prompt(fun, snippets, defaultPromptOptions())];
+      const promptOptions = {
+        ...defaultPromptOptions(),
+        templateFileName: this.templateFileName,
+        retryTemplateFileName: this.retryTemplateFileName,
+      };
+      const worklist = [new Prompt(fun, snippets, promptOptions)];
       while (worklist.length > 0) {
         const prompt = worklist.pop()!;
 
@@ -56,25 +64,30 @@ export class TestGenerator {
         }
         generatedPrompts.set(assembledPrompt, prompt);
 
-        const completions = await this.model.completions(
-          prompt.assemble(),
+        const rawCompletions = await this.model.completions(
+          assembledPrompt,
           temperature
         );
-        for (const completion of completions) {
-          const testInfo = this.validateCompletion(
-            prompt,
-            completion,
-            temperature
-          );
-          if (testInfo.outcome.status === TestStatus.PASSED) {
-            generatedPassingTests = true;
+        let completions = new Set<string>;  
+        for (const rawCompletion of rawCompletions) {
+          const tests = extractTestFromRawCompletion(rawCompletion);
+          if (tests.size > 0) {
+            for (const test of tests) {
+              const testInfo = this.validateCompletion(
+                prompt,
+                test,
+                temperature
+              );
+              if (testInfo.outcome.status === TestStatus.PASSED) {
+                generatedPassingTests = true;
+              }
+              this.refinePrompts(prompt, test, testInfo, worklist);
+              if (generatedPassingTests) break;
+            }
           }
-
-          this.refinePrompts(prompt, completion, testInfo, worklist);
         }
         this.collector.recordPromptInfo(prompt, temperature, completions);
       }
-      if (generatedPassingTests) break;
     }
   }
 
@@ -87,8 +100,7 @@ export class TestGenerator {
     completion: string,
     temperature: number
   ) {
-    const testSource = prompt.completeTest(completion);
-
+    let testSource = prompt.completeTest(completion);
     const testInfo = this.collector.recordTestInfo(
       testSource ?? completion,
       prompt,
@@ -139,4 +151,39 @@ export class TestGenerator {
       }
     }
   }
+}
+
+function extractTestFromRawCompletion(rawCompletion: string): Set<string> {
+  const regExp = /```[^\n\r]*\n((?:.(?!```))*)\n```/gs;
+  let match;
+  while ((match = regExp.exec(rawCompletion)) !== null) {
+    const code = match[1];
+    const set = new Set<string>();
+    if (code.split('it(').length === 2) {
+      set.add(code);
+      return set;
+    } else { // we received a suite with more than one test, turn this into multiple suites each containing one test
+      const indexOfSuite = code.indexOf('describe(');
+      const indexOfFirstTest = code.indexOf('it(');
+      let testIndex = indexOfFirstTest;
+      while (code.indexOf('it(', testIndex + 1) !== -1) { // while there is another test
+        const nextTestIndex = code.indexOf('it(', testIndex + 1);
+        const test = code.substring(testIndex, nextTestIndex);
+        set.add(test);
+        testIndex = nextTestIndex;
+      }
+      // add the last test
+      const lastTest = code.substring(testIndex);
+      set.add(lastTest);
+      const preSuite = code.substring(0, indexOfSuite);
+      const suiteHeader = code.substring(indexOfSuite, indexOfFirstTest);
+      const result = new Set([...set].map((test) => { return preSuite + suiteHeader + test; }));
+      return result;
+    }
+  }
+  // if we're unable to extract something, return a set containing the raw completion
+  // even though it's unlikely to validate
+  const set = new Set<string>();
+  set.add(rawCompletion);
+  return set;
 }
