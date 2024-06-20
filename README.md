@@ -92,8 +92,7 @@ This generates tests for all functions exported by the package in
 Note that this assumes that package dependencies are installed and any build
 steps have been run (e.g., using `npm i` and `npm run build`). TestPilot also
 relies on `mocha`, so if the package under test does not already depend on it,
-you must install it separately, for example using the command `npm i --no-save
-mocha`.
+you must install it separately, for example using the command `npm i --no-save mocha`.
 
 ### Running on Actions
 

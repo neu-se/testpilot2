@@ -114,7 +114,7 @@ jobs:
           repository: ${{ format('{0}/{1}', matrix.package.owner, matrix.package.repo) }}
           ref: ${{ matrix.package.sha }}
           path: "source"
-      
+
       - name: Checkout gitlab package repo
         if: ${{ matrix.package.host == 'gitlab.com' }}
         run: |
@@ -168,7 +168,7 @@ jobs:
         env:
           TESTPILOT_LLM_API_ENDPOINT: "https://model-6.openai.azure.com/openai/deployments/turbo/completions?api-version=2022-12-01"
           TESTPILOT_LLM_AUTH_HEADERS: '{ "api-key": "${{ secrets.GPT35_API_KEY }}" }'
-          STARCODER_API_ENDPOINT: '${{ secrets.STARCODER_API_ENDPOINT3 }}'
+          STARCODER_API_ENDPOINT: "${{ secrets.STARCODER_API_ENDPOINT3 }}"
         run: |
           cd testpilot
           outputdir="results/$TESTPILOT_PACKAGE_NAME"
