@@ -39,7 +39,11 @@ Describes the function being tested, including its signature and a brief documen
 ## **Initializing the Test Generator Components**
 
 ```typescript
-const apiFunction = new APIFunction("moment().add", functionDescriptor, "moment");
+const apiFunction = new APIFunction(
+  "moment().add",
+  functionDescriptor,
+  "moment"
+);
 const model = new Codex(false, {
   n: 5,
   max_tokens: 150,
@@ -50,9 +54,18 @@ const validator = new MochaValidator("moment", momentPath);
 const collector = new BaseTestResultCollector();
 const temperatures = [0.7];
 const snippetMap = new Map([
-  [apiFunction.functionName, ["moment().add(10, 'days')", "moment().add(1, 'year').format('YYYY')"]],
+  [
+    apiFunction.functionName,
+    ["moment().add(10, 'days')", "moment().add(1, 'year').format('YYYY')"],
+  ],
 ]);
-const generator = new TestGenerator(temperatures, (fn) => snippetMap.get(fn), model, validator, collector);
+const generator = new TestGenerator(
+  temperatures,
+  (fn) => snippetMap.get(fn),
+  model,
+  validator,
+  collector
+);
 ```
 
 Initializes the object that makes prompts to the Codex-based completion API, and sets up paths and validators for test generation. Used `https://api.openai.com/v1/engines/gpt-3.5-turbo-instruct/completions`.
@@ -65,9 +78,10 @@ await generator.generateAndValidateTests(apiFunction);
 const testInfos = collector.getTestInfos();
 console.log("Test generation complete. Test Details:");
 testInfos.forEach((test) => {
-  console.log(`Test ID: ${test.id}, Test Name: ${test.testName}, Outcome: ${test.outcome.status}`);
+  console.log(
+    `Test ID: ${test.id}, Test Name: ${test.testName}, Outcome: ${test.outcome.status}`
+  );
 });
-
 ```
 
 Generates tests and logs the results to the console.
@@ -88,16 +102,16 @@ class CustomMochaValidator extends MochaValidator {
   }
 
   validateTest(testName, testSource) {
-    let testFile = path.join(this.testDirectory, testName + '.js');
+    let testFile = path.join(this.testDirectory, testName + ".js");
     fs.writeFileSync(testFile, testSource);
     console.log(`Test saved to: ${testFile}`); // Log where the test is saved
     // Call original validateTest logic here if needed, or simulate a test outcome
-    return { status: 'PASSED' }; // Simulate a passed test outcome
+    return { status: "PASSED" }; // Simulate a passed test outcome
   }
 
   // Override the cleanup to prevent deletion
   cleanup() {
-    console.log('Cleanup skipped, tests preserved.');
+    console.log("Cleanup skipped, tests preserved.");
   }
 }
 ```
@@ -110,26 +124,26 @@ The code shown in this example is at `/examples/testGenerationScript.ts`, but it
 
 1. Copy `testGenerationScript.ts` to `src/`, making sure that the second import directory is `./`
 
-    ```sh
-    cp examples/testGenerationScript.ts src/
-    ```
+   ```sh
+   cp examples/testGenerationScript.ts src/
+   ```
 
 2. Install Moment.js with `npm`
 
-    ```sh
-    npm install moment
-    ```
+   ```sh
+   npm install moment
+   ```
 
 3. Build the files again
 
-    ```sh
-    npm run build
-    ```
+   ```sh
+   npm run build
+   ```
 
 4. Finally, set the environment variables and run the script with `node`:
 
-    ```sh
-    export TESTPILOT_LLM_API_ENDPOINT='https://api.openai.com/v1/engines/gpt-3.5-turbo-instruct/completions'
-    export TESTPILOT_LLM_AUTH_HEADERS='{"Authorization": "Bearer <your API key>", "OpenAI-Organization": "<your organization ID>"}'
-    node dist/testGenerationScript.js
-    ```
+   ```sh
+   export TESTPILOT_LLM_API_ENDPOINT='https://api.openai.com/v1/engines/gpt-3.5-turbo-instruct/completions'
+   export TESTPILOT_LLM_AUTH_HEADERS='{"Authorization": "Bearer <your API key>", "OpenAI-Organization": "<your organization ID>"}'
+   node dist/testGenerationScript.js
+   ```
