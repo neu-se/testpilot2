@@ -155,7 +155,7 @@ if (require.main === module) {
           demandOption: true,
           default: "./templates/retry-template.hb",
           description: "Handlebars template file to use",
-        }
+        },
       });
     const argv = await parser.argv;
 

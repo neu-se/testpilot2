@@ -53,7 +53,6 @@ export class MochaValidator extends TestValidator {
   }
 
   public validateTest(testName: string, testSource: string): TestOutcome {
-
     const requirePattern = new RegExp(
       `require\\('${this.packageName}'\\)`,
       "g"
@@ -101,11 +100,7 @@ export class MochaValidator extends TestValidator {
       killSignal: "SIGKILL",
     };
     //console.log(`Running test: ${testName}, command: ${command} ${args.join(" ")} --options=${JSON.stringify(options)}`);
-    const res = spawnSync(
-      command,
-      args,
-      options
-    );
+    const res = spawnSync(command, args, options);
     performance.measure(`duration:${testName}`, `start:${testName}`);
     const stderr = res.stderr.toString();
     const report = MochaValidator.tryParseReport(reportFile);
@@ -148,7 +143,7 @@ export class MochaValidator extends TestValidator {
     } else {
       // further sanity check: there should be exactly one result (either passed or pending)
       const numResults = report.passes.length + report.pending.length;
-      if (numResults != 1) {        
+      if (numResults != 1) {
         console.log(`WARNING: Expected 1 test result, got ${numResults}`);
       }
 

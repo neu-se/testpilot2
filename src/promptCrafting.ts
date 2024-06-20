@@ -143,33 +143,47 @@ export class Prompt {
     const docComments = this.docComment;
     const snippets = this.assembleUsageSnippets();
     const headers = this.imports + this.suiteHeader + this.testHeader;
- 
+
     const templateFileName = this.options.templateFileName;
     const template = fs.readFileSync(templateFileName!, "utf8");
     const compiledTemplate = handlebars.compile(template);
-    let expandedTemplate = compiledTemplate({ 
-      signature: signature.trim(), 
+    let expandedTemplate = compiledTemplate({
+      signature: signature.trim(),
       docComments: docComments ? docComments : "",
-      functionBody: functionBody ? `This function is defined as follows:\n\`\`\`\n${functionBody.trim()}\n\`\`\`` : "",
-      snippets: snippets ? `You may use the following examples to guide your implementation:\n\`\`\`\n${snippets}\n\`\`\`` : "",
-      code: headers });
-    while (expandedTemplate.includes('\n\n\n')){ // avoid unnecessary blank lines
-      expandedTemplate = expandedTemplate.replace('\n\n\n','\n\n');
+      functionBody: functionBody
+        ? `This function is defined as follows:\n\`\`\`\n${functionBody.trim()}\n\`\`\``
+        : "",
+      snippets: snippets
+        ? `You may use the following examples to guide your implementation:\n\`\`\`\n${snippets}\n\`\`\``
+        : "",
+      code: headers,
+    });
+    while (expandedTemplate.includes("\n\n\n")) {
+      // avoid unnecessary blank lines
+      expandedTemplate = expandedTemplate.replace("\n\n\n", "\n\n");
     }
-    while (expandedTemplate.includes('\`\`\`\n\n')){ // avoid empty lines at the beginning of fenced code blocks
-      expandedTemplate = expandedTemplate.replace('\`\`\`\n\n','\`\`\`\n');
+    while (expandedTemplate.includes("```\n\n")) {
+      // avoid empty lines at the beginning of fenced code blocks
+      expandedTemplate = expandedTemplate.replace("```\n\n", "```\n");
     }
-    while (expandedTemplate.includes('\n\n\`\`\`')){ // avoid empty lines at the end of fenced code blocks
-      expandedTemplate = expandedTemplate.replace('\n\n\`\`\`','\n\`\`\`');
+    while (expandedTemplate.includes("\n\n```")) {
+      // avoid empty lines at the end of fenced code blocks
+      expandedTemplate = expandedTemplate.replace("\n\n```", "\n```");
     }
-    if (expandedTemplate.includes('Please')){
-      expandedTemplate = expandedTemplate.replace('Please', '\nPlease'); // start new paragraph for the instructions
+    if (expandedTemplate.includes("Please")) {
+      expandedTemplate = expandedTemplate.replace("Please", "\nPlease"); // start new paragraph for the instructions
     }
-    if (expandedTemplate.includes('This function')){
-      expandedTemplate = expandedTemplate.replace('This function', '\nThis function'); // start new paragraph for the function body
+    if (expandedTemplate.includes("This function")) {
+      expandedTemplate = expandedTemplate.replace(
+        "This function",
+        "\nThis function"
+      ); // start new paragraph for the function body
     }
-    if (expandedTemplate.includes('You may use')){
-      expandedTemplate = expandedTemplate.replace('You may use', '\nYou may use'); // start new paragraph for the examples
+    if (expandedTemplate.includes("You may use")) {
+      expandedTemplate = expandedTemplate.replace(
+        "You may use",
+        "\nYou may use"
+      ); // start new paragraph for the examples
     }
     return expandedTemplate;
   }
@@ -182,30 +196,31 @@ export class Prompt {
     body: string,
     stubOutHeaders: boolean = true
   ): string | undefined {
-
     let code = "";
 
     // add imports if first line of body does not contain "require"
-    const line = body.split('\n')[0];
-    if (line.indexOf('require') === -1){
-      code += this.imports + '\n';
-    }  
+    const line = body.split("\n")[0];
+    if (line.indexOf("require") === -1) {
+      code += this.imports + "\n";
+    }
 
     // add headers if they are not already in the body
-    if (!body.includes("describe(")){
-      code = code +
-         (stubOutHeaders
-           ? // stub out suite header and test header so we don't double-count identical tests
-             "describe('test suite', function() {\n" +
-             "    it('test case', function(done) {\n"
-           : this.suiteHeader + this.testHeader) +
-         // add the body, making sure the first line is indented correctly
-         body.trim().replace(/^(?=\S)/, " ".repeat(8)) +
-         "\n";
-    } else { // only add the body if it already includes test/suite headers
+    if (!body.includes("describe(")) {
+      code =
+        code +
+        (stubOutHeaders
+          ? // stub out suite header and test header so we don't double-count identical tests
+            "describe('test suite', function() {\n" +
+            "    it('test case', function(done) {\n"
+          : this.suiteHeader + this.testHeader) +
+        // add the body, making sure the first line is indented correctly
+        body.trim().replace(/^(?=\S)/, " ".repeat(8)) +
+        "\n";
+    } else {
+      // only add the body if it already includes test/suite headers
       code += body;
     }
-    
+
     // close brackets
     const fixed = closeBrackets(code);
 
@@ -218,8 +233,8 @@ export class Prompt {
   //   const templateFileName = this.options.templateFileName;
   //   const template = fs.readFileSync(templateFileName!, "utf8");
   //   const compiledTemplate = handlebars.compile(template);
-  //   let expandedTemplate = compiledTemplate({ 
-  //     signature: signature.trim(), 
+  //   let expandedTemplate = compiledTemplate({
+  //     signature: signature.trim(),
   //     docComments: docComments ? docComments : "",
   //     functionBody: functionBody ? `This function is defined as follows:\n\`\`\`\n${functionBody.trim()}\n\`\`\`` : "",
   //     snippets: snippets ? `You may use the following examples to guide your implementation:\n\`\`\`\n${snippets}\n\`\`\`` : "",
@@ -330,7 +345,10 @@ export class RetryPrompt extends Prompt {
     const templateFileName = this.options.retryTemplateFileName;
     const template = fs.readFileSync(templateFileName!, "utf8");
     const compiledTemplate = handlebars.compile(template);
-    const expandedTemplate = compiledTemplate({ test: rawFailingTest, error: this.err });
+    const expandedTemplate = compiledTemplate({
+      test: rawFailingTest,
+      error: this.err,
+    });
     return expandedTemplate;
   }
 }

@@ -68,7 +68,7 @@ export class TestGenerator {
           assembledPrompt,
           temperature
         );
-        let completions = new Set<string>;  
+        let completions = new Set<string>();
         for (const rawCompletion of rawCompletions) {
           const tests = extractTestFromRawCompletion(rawCompletion);
           if (tests.size > 0) {
@@ -159,15 +159,17 @@ function extractTestFromRawCompletion(rawCompletion: string): Set<string> {
   while ((match = regExp.exec(rawCompletion)) !== null) {
     const code = match[1];
     const set = new Set<string>();
-    if (code.split('it(').length === 2) {
+    if (code.split("it(").length === 2) {
       set.add(code);
       return set;
-    } else { // we received a suite with more than one test, turn this into multiple suites each containing one test
-      const indexOfSuite = code.indexOf('describe(');
-      const indexOfFirstTest = code.indexOf('it(');
+    } else {
+      // we received a suite with more than one test, turn this into multiple suites each containing one test
+      const indexOfSuite = code.indexOf("describe(");
+      const indexOfFirstTest = code.indexOf("it(");
       let testIndex = indexOfFirstTest;
-      while (code.indexOf('it(', testIndex + 1) !== -1) { // while there is another test
-        const nextTestIndex = code.indexOf('it(', testIndex + 1);
+      while (code.indexOf("it(", testIndex + 1) !== -1) {
+        // while there is another test
+        const nextTestIndex = code.indexOf("it(", testIndex + 1);
         const test = code.substring(testIndex, nextTestIndex);
         set.add(test);
         testIndex = nextTestIndex;
@@ -177,7 +179,11 @@ function extractTestFromRawCompletion(rawCompletion: string): Set<string> {
       set.add(lastTest);
       const preSuite = code.substring(0, indexOfSuite);
       const suiteHeader = code.substring(indexOfSuite, indexOfFirstTest);
-      const result = new Set([...set].map((test) => { return preSuite + suiteHeader + test; }));
+      const result = new Set(
+        [...set].map((test) => {
+          return preSuite + suiteHeader + test;
+        })
+      );
       return result;
     }
   }

@@ -116,23 +116,25 @@ describe("TestGenerator", () => {
         }
       }
     }
-    
+
     await testGenerator.generateAndValidateTests(fun);
 
     // sort by key to avoid failures where the order of properties in JSON objects differs
-    expect(sortByKey(collector.getPromptInfos())).to.deep.equal(sortByKey(expectedPromptInfos));
-    expect(sortByKey(collector.getTestInfos())).to.deep.equal(sortByKey(expectedTestInfos));
-
+    expect(sortByKey(collector.getPromptInfos())).to.deep.equal(
+      sortByKey(expectedPromptInfos)
+    );
+    expect(sortByKey(collector.getTestInfos())).to.deep.equal(
+      sortByKey(expectedTestInfos)
+    );
   }
 
-  function sortByKey(jsonObject: any) : any {
+  function sortByKey(jsonObject: any): any {
     const keys = Object.keys(jsonObject).sort();
     let sortedJsonObject: any = {};
     for (let key of keys) {
       sortedJsonObject[key] = jsonObject[key];
     }
   }
-   
 
   it("should handle the straightforward case with a single prompt and a single completion", async () => {
     const fun = APIFunction.fromSignature("string-utils.titleCase(string)");
@@ -141,7 +143,7 @@ describe("TestGenerator", () => {
     const promptOptions = {
       ...defaultPromptOptions(),
       templateFileName: "templates/template.hb",
-      retryTemplateFileName: "templates/retry-template.hb"
+      retryTemplateFileName: "templates/retry-template.hb",
     };
     await runSimpleTest(
       fun,
@@ -164,7 +166,7 @@ describe("TestGenerator", () => {
     const promptOptions = {
       ...defaultPromptOptions(),
       templateFileName: "templates/template.hb",
-      retryTemplateFileName: "templates/retry-template.hb"
+      retryTemplateFileName: "templates/retry-template.hb",
     };
     const initialPrompt = new Prompt(fun, [], promptOptions);
     const provenance = {
@@ -207,7 +209,7 @@ describe("TestGenerator", () => {
     const promptOptions = {
       ...defaultPromptOptions(),
       templateFileName: "templates/template.hb",
-      retryTemplateFileName: "templates/retry-template.hb"
+      retryTemplateFileName: "templates/retry-template.hb",
     };
     const initialPrompt = new Prompt(fun, [snippet], promptOptions);
     const provenance = {
@@ -257,7 +259,7 @@ describe("TestGenerator", () => {
     const promptOptions = {
       ...defaultPromptOptions(),
       templateFileName: "templates/template.hb",
-      retryTemplateFileName: "templates/retry-template.hb"
+      retryTemplateFileName: "templates/retry-template.hb",
     };
     const initialPrompt = new Prompt(fun, [snippet], promptOptions);
     const provenance = {
@@ -293,12 +295,11 @@ describe("TestGenerator", () => {
       "    assert(stringUtils.titleCase('hello world') === 'Hello World');";
     const cmp2 =
       "    assert(stringUtils.titleCase('Hello world') === 'Hello World');";
-    const promptOptions =
-      {
-        ...defaultPromptOptions(),
-        templateFileName: "templates/template.hb",
-        retryTemplateFileName: "templates/retry-template.hb"
-      };
+    const promptOptions = {
+      ...defaultPromptOptions(),
+      templateFileName: "templates/template.hb",
+      retryTemplateFileName: "templates/retry-template.hb",
+    };
     const initialPrompt = new Prompt(fun, [snippet], promptOptions);
     const provenance1 = {
       originalPrompt: initialPrompt,
@@ -338,11 +339,10 @@ describe("TestGenerator", () => {
     const fun = APIFunction.fromSignature("string-utils.titleCase(string)");
     const snippet = "stringUtils.titleCase('hello world')";
 
-    const promptOptions = 
-    {
+    const promptOptions = {
       ...defaultPromptOptions(),
       templateFileName: "templates/template.hb",
-      retryTemplateFileName: "templates/retry-template.hb"
+      retryTemplateFileName: "templates/retry-template.hb",
     };
 
     // pretend we get an invalid completion when running without snippets
@@ -360,7 +360,11 @@ describe("TestGenerator", () => {
       includeSnippets: true,
     };
 
-    const refinedPrompt = new Prompt(fun, [snippet], promptOptionsWithSnippet).withProvenance(provenance);
+    const refinedPrompt = new Prompt(
+      fun,
+      [snippet],
+      promptOptionsWithSnippet
+    ).withProvenance(provenance);
     const validCmp =
       "    assert(stringUtils.titleCase('hello world') === 'Hello World');";
 

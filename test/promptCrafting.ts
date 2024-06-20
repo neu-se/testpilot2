@@ -132,12 +132,11 @@ describe("retry-with-error refiner", () => {
     const fun = APIFunction.fromSignature("plus(x, y)");
     fun.descriptor.docComment = "Concatenates two strings.";
 
-    const promptOptions =
-    {
-      ...defaultPromptOptions(), 
+    const promptOptions = {
+      ...defaultPromptOptions(),
       includeDocComment: true,
       templateFileName: "./templates/template.hb",
-      retryTemplateFileName: "./templates/retry-template.hb"
+      retryTemplateFileName: "./templates/retry-template.hb",
     };
 
     const prompt = new Prompt(fun, [], promptOptions);
@@ -154,7 +153,7 @@ describe("retry-with-error refiner", () => {
     })`;
 
     expect(prompt.completeTest(completion)).to.equal(completion);
-    
+
     // then, a retry
     const errmsg = "expected 2 to equal 3";
     const refined = retryWithErrorRefiner.refine(
@@ -187,7 +186,7 @@ failed with the following error message:
 Your task is to modify the above code to fix the test. 
 
 Provide your answer as a fenced code block.`;
-         
+
     expect(actualRefinedPrompt).to.equal(expectedRefinedPrompt);
   });
 });
@@ -206,11 +205,10 @@ describe("function-body inclusion", () => {
     );
 
     // initial prompt
-    const promptOptions = 
-      {
-        ...defaultPromptOptions(),
-        templateFileName: "./templates/template.hb"
-      };
+    const promptOptions = {
+      ...defaultPromptOptions(),
+      templateFileName: "./templates/template.hb",
+    };
     const prompt = new Prompt(fun, [], promptOptions);
     const actualPrompt = prompt.assemble();
     const expectedPrompt = dedent`
@@ -231,8 +229,8 @@ describe("function-body inclusion", () => {
     external resources. For example, a test should not attempt to access files that it does not create itself.
 
     Provide your answer as a fenced code block.`;
-    
-    expect(actualPrompt).to.equal(expectedPrompt);  
+
+    expect(actualPrompt).to.equal(expectedPrompt);
 
     // refined prompt
     const refined = functionBodyIncluder.refine(
@@ -269,7 +267,7 @@ describe("function-body inclusion", () => {
     external resources. For example, a test should not attempt to access files that it does not create itself.
 
     Provide your answer as a fenced code block.`;
-    
+
     expect(actualRefinedPrompt).to.equal(expectedRefinedPrompt);
   });
 
@@ -291,11 +289,10 @@ describe("test prompt assembly", () => {
     const fun = APIFunction.fromSignature(
       "zip-a-folder.ZipAFolder.tar(srcFolder, tarFilePath, zipAFolderOptions) async"
     );
-    const promptOptions = 
-      {
-        ...defaultPromptOptions(),
-        templateFileName: "./templates/template.hb"
-      };
+    const promptOptions = {
+      ...defaultPromptOptions(),
+      templateFileName: "./templates/template.hb",
+    };
     const prompt = new Prompt(fun, [], promptOptions);
 
     const expectedPrompt = dedent`
@@ -324,12 +321,11 @@ describe("test prompt assembly", () => {
       "zip-a-folder.ZipAFolder.tar(srcFolder, tarFilePath, zipAFolderOptions) async"
     );
     fun.descriptor.docComment = "*\n* zips folder \n* @param {string}";
-    const promptOptions = 
-      {
-        ...defaultPromptOptions(),
-        includeDocComment: true,
-        templateFileName: "./templates/template.hb"
-      };
+    const promptOptions = {
+      ...defaultPromptOptions(),
+      includeDocComment: true,
+      templateFileName: "./templates/template.hb",
+    };
     const prompt = new Prompt(fun, [], promptOptions);
 
     const expectedPrompt = dedent`
@@ -352,18 +348,17 @@ describe("test prompt assembly", () => {
       so that it becomes a test suite containing a few self-contained unit tests.  The tests should not rely on any 
       external resources. For example, a test should not attempt to access files that it does not create itself.
 
-      Provide your answer as a fenced code block.`;        
+      Provide your answer as a fenced code block.`;
     expect(prompt.assemble()).to.equal(expectedPrompt);
   });
 
   it("should assemble a prompt with snippets", () => {
     const fun = APIFunction.fromSignature("plural.addRule(match, result)");
-    const promptOptions = 
-      {
-        ...defaultPromptOptions(),
-        includeSnippets: true,
-        templateFileName: "./templates/template.hb"
-      };
+    const promptOptions = {
+      ...defaultPromptOptions(),
+      includeSnippets: true,
+      templateFileName: "./templates/template.hb",
+    };
     const prompt = new Prompt(
       fun,
       [
@@ -404,20 +399,19 @@ describe("test prompt assembly", () => {
       so that it becomes a test suite containing a few self-contained unit tests.  The tests should not rely on any 
       external resources. For example, a test should not attempt to access files that it does not create itself.
 
-      Provide your answer as a fenced code block.`;              
+      Provide your answer as a fenced code block.`;
     expect(prompt.assemble()).to.equal(expectedPrompt);
   });
 
   it("should assemble a prompt with doc comments and snippets", () => {
     const fun = APIFunction.fromSignature("plural.addRule(match, result)");
     fun.descriptor.docComment = "*\n* adds rule \n* @param {string}";
-    const promptOptions =
-      {
-        ...defaultPromptOptions(),
-        includeSnippets: true,
-        includeDocComment: true,
-        templateFileName: "./templates/template.hb"
-      };
+    const promptOptions = {
+      ...defaultPromptOptions(),
+      includeSnippets: true,
+      includeDocComment: true,
+      templateFileName: "./templates/template.hb",
+    };
     const prompt = new Prompt(
       fun,
       [
@@ -468,11 +462,10 @@ describe("test prompt assembly", () => {
 
 describe("test completion of tests", () => {
   it("should complete a test", () => {
-    const promptOptions =
-      {
-        ...defaultPromptOptions(),
-        templateFileName: "./templates/template.hb"
-      };
+    const promptOptions = {
+      ...defaultPromptOptions(),
+      templateFileName: "./templates/template.hb",
+    };
     const prompt = new Prompt(
       APIFunction.fromSignature(
         "zip-a-folder.ZipAFolder.tar(srcFolder, tarFilePath, zipAFolderOptions) async"
@@ -493,7 +486,7 @@ describe("test completion of tests", () => {
                     done();
                 })
             })
-        `; 
+        `;
     expect(prompt.completeTest(body)).to.equal(expectedTest);
   });
 });

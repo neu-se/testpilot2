@@ -26,7 +26,7 @@ export class ChatModel implements ICompletionModel {
   private readonly authHeaders: string;
 
   constructor(
-    private readonly model: string, 
+    private readonly model: string,
     private readonly instanceOptions: PostOptions = {}
   ) {
     this.apiEndpoint = getEnv("TESTPILOT_LLM_API_ENDPOINT");
@@ -45,12 +45,11 @@ export class ChatModel implements ICompletionModel {
     prompt: string,
     requestPostOptions: PostOptions = {}
   ): Promise<Set<string>> {
-
     const headers = {
       "Content-Type": "application/json",
       ...JSON.parse(this.authHeaders),
     };
-     
+
     const options = {
       ...defaultPostOptions,
       // options provided to constructor override default options
@@ -60,20 +59,20 @@ export class ChatModel implements ICompletionModel {
     };
 
     performance.mark("llm-query-start");
-    
+
     const postOptions = {
       model: this.model,
       messages: [
         {
           role: "system",
-          content: "You are a programming assistant."
+          content: "You are a programming assistant.",
         },
         {
           role: "user",
-          content: prompt
-        }
+          content: prompt,
+        },
       ],
-      ...options
+      ...options,
     };
 
     const res = await axios.post(this.apiEndpoint, postOptions, { headers });
@@ -103,7 +102,7 @@ export class ChatModel implements ICompletionModel {
     for (const choice of json.choices) {
       const content = choice.message.content;
       completions.add(content);
-    } 
+    }
     return completions;
   }
 
