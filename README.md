@@ -1,6 +1,6 @@
 # TestPilot 2
 
-TestPilot 2 is a tool for automatically generating unit tests for npm packages 
+TestPilot 2 is a tool for automatically generating unit tests for npm packages
 written in JavaScript/TypeScript using a large language model (LLM). It is an
 adaptation of [TestPilot](https://github.com/githubnext/testpilot/) that works with chat models instead of completion models.
 A research paper describing TestPilot in detail is available from [IEEExplore](https://ieeexplore.ieee.org/document/10329992).
@@ -18,8 +18,6 @@ failed test, giving it a chance to refine the test.
 Unlike other systems for LLM-based test generation, TestPilot 2 does not require
 any additional training or reinforcement learning, and no examples of functions
 and their associated tests are needed.
-
-
 
 ## Requirements
 
@@ -58,7 +56,7 @@ dependencies and run a build.
 ## Benchmarking
 
 If you install TestPilot 2 from source, you can use the benchmarking harness to
-run TestPilot 2 on multiple packages and analyze the results. 
+run TestPilot 2 on multiple packages and analyze the results.
 
 ### Running locally
 
@@ -74,8 +72,7 @@ This generates tests for all functions exported by the package in
 Note that this assumes that package dependencies are installed and any build
 steps have been run (e.g., using `npm i` and `npm run build`). TestPilot also
 relies on `mocha`, so if the package under test does not already depend on it,
-you must install it separately, for example using the command `npm i --no-save
-mocha`.
+you must install it separately, for example using the command `npm i --no-save mocha`.
 
 ### Running on Actions
 

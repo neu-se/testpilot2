@@ -51,7 +51,7 @@ jobs:
           repository: ${{ format('{0}/{1}', matrix.package.owner, matrix.package.repo) }}
           ref: ${{ matrix.package.sha }}
           path: "source"
-      
+
       - name: Checkout gitlab package repo
         if: ${{ matrix.package.host == 'gitlab.com' }}
         run: |
