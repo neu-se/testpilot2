@@ -178,16 +178,19 @@ jobs:
           echo "Computing package statistics"
           node benchmark/package_stats.js "$TESTPILOT_PACKAGE_PATH" > stats.json
           echo "Generating tests for $TESTPILOT_PACKAGE_NAME"
-          node benchmark/run.js \
-            --outputDir $outputdir \
-            --package "$TESTPILOT_PACKAGE_PATH" \
-            # --snippets ${{ needs.setup.outputs.snippetsFrom }} \
-            # --numSnippets ${{ needs.setup.outputs.numSnippets }} \
-            # --snippetLength ${{ needs.setup.outputs.snippetLength }} \
-            # --temperatures "${{ needs.setup.outputs.temperatures }}" \
-            --model ${{ needs.setup.outputs.model }} \
-            --template ${{ needs.setup.outputs.template }} \
-            --retryTemplate ${{ needs.setup.outputs.retryTemplate }} \
+          # node benchmark/run.js \
+          #   --outputDir $outputdir \
+          #   --package "$TESTPILOT_PACKAGE_PATH" \
+          #   # --snippets ${{ needs.setup.outputs.snippetsFrom }} \
+          #   # --numSnippets ${{ needs.setup.outputs.numSnippets }} \
+          #   # --snippetLength ${{ needs.setup.outputs.snippetLength }} \
+          #   # --temperatures "${{ needs.setup.outputs.temperatures }}" \
+          #   --model ${{ needs.setup.outputs.model }} \
+          #   --template ${{ needs.setup.outputs.template }} \
+          #   --retryTemplate ${{ needs.setup.outputs.retryTemplate }} \
+          command = "node benchmark/run.js --outputDir $outputdir --package $TESTPILOT_PACKAGE_PATH --model ${{ needs.setup.outputs.model }} --template ${{ needs.setup.outputs.template }} --retryTemplate ${{ needs.setup.outputs.retryTemplate }}"
+          echo "command: $command"
+          $command
           mv stats.json $outputdir
 
       - name: Calculate edit distance of generated tests
