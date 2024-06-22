@@ -170,7 +170,8 @@ jobs:
       - name: Generate tests
         env:
           TESTPILOT_LLM_API_ENDPOINT: '${{ secrets.TESTPILOT_LLM_API_ENDPOINT }}'
-          TESTPILOT_LLM_AUTH_HEADERS: '{ "api-key": "${{ secrets.TESTPILOT_LLM_AUTH_HEADERS }}" }'
+          TESTPILOT_LLM_AUTH_HEADERS: '${{ secrets.TESTPILOT_LLM_AUTH_HEADERS }}'
+          TEST_SECRET: '${{ secrets.TEST_SECRET }}'
         run: |
           cd testpilot
           outputdir="results/$TESTPILOT_PACKAGE_NAME"
@@ -178,6 +179,7 @@ jobs:
           echo "Computing package statistics"
           node benchmark/package_stats.js "$TESTPILOT_PACKAGE_PATH" > stats.json
           echo "Generating tests for $TESTPILOT_PACKAGE_NAME"
+          echo "Test secret: $TEST_SECRET"
           node benchmark/run.js \
             --outputDir $outputdir \
             --package "$TESTPILOT_PACKAGE_PATH" \
