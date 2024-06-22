@@ -188,7 +188,7 @@ jobs:
           #   --model ${{ needs.setup.outputs.model }} \
           #   --template ${{ needs.setup.outputs.template }} \
           #   --retryTemplate ${{ needs.setup.outputs.retryTemplate }} \
-          command = "node benchmark/run.js --outputDir $outputdir --package $TESTPILOT_PACKAGE_PATH --model ${{ needs.setup.outputs.model }} --template ${{ needs.setup.outputs.template }} --retryTemplate ${{ needs.setup.outputs.retryTemplate }}"
+          export command="node benchmark/run.js --outputDir $outputdir --package $TESTPILOT_PACKAGE_PATH --model ${{ needs.setup.outputs.model }} --template ${{ needs.setup.outputs.template }} --retryTemplate ${{ needs.setup.outputs.retryTemplate }}"
           echo "command: $command"
           $command
           mv stats.json $outputdir
