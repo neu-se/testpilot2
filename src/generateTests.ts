@@ -64,13 +64,12 @@ export class TestGenerator {
         }
         generatedPrompts.set(assembledPrompt, prompt);
 
-        const rawCompletions = await this.model.completions(
+        const completions = await this.model.completions(
           assembledPrompt,
           temperature
         );
-        let completions = new Set<string>();
-        for (const rawCompletion of rawCompletions) {
-          const tests = extractTestFromRawCompletion(rawCompletion);
+        for (const completion of completions) {
+          const tests = extractTestFromCompletion(completion);
           if (tests.size > 0) {
             for (const test of tests) {
               const testInfo = this.validateCompletion(
@@ -153,7 +152,7 @@ export class TestGenerator {
   }
 }
 
-function extractTestFromRawCompletion(rawCompletion: string): Set<string> {
+function extractTestFromCompletion(rawCompletion: string): Set<string> {
   const regExp = /```[^\n\r]*\n((?:.(?!```))*)\n```/gs;
   let match;
   while ((match = regExp.exec(rawCompletion)) !== null) {
