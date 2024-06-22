@@ -163,6 +163,10 @@ jobs:
         run: |
           codeql database create --language=javascript "--source-root=$TESTPILOT_PACKAGE_PATH" -- ./db
 
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}    
+
       - name: Generate tests
         env:
           TESTPILOT_LLM_API_ENDPOINT: '${{ secrets.TESTPILOT_LLM_API_ENDPOINT }}'
