@@ -25,9 +25,10 @@ on:
         description: "Which LLM API to use"
         type: "choice"
         options:
-          - "gpt"
-          - "starcoder"
-        default: "gpt"
+          - "llama-3-8b-instruct"
+          - "llama-3-70b-instruct"
+          - "mixtral-8x7b-instruct"
+        default: "llama-3-70b-instruct"
       compareTo:
         description: "Run number of previous run to compare to (leave empty to skip comparison)"
         default: ""
@@ -53,7 +54,9 @@ jobs:
       temperatures: "${{ github.event.inputs.temperatures || '0.0' }}"
       numSnippets: "${{ github.event.inputs.numSnippets || 'all' }}"
       numCompletions: "${{ github.event.inputs.numCompletions || '5' }}"
-      model: "${{ github.event.inputs.model || 'gpt' }}"
+      model: "${{ github.event.inputs.model || 'llama-3-70b-instruct' }}"
+      template: './templates/template.hb'
+      retryTemplate: './templates/retry-template.hb'
     steps:
       - uses: actions/checkout@v3
 
@@ -166,9 +169,8 @@ jobs:
 
       - name: Generate tests
         env:
-          TESTPILOT_LLM_API_ENDPOINT: "https://model-6.openai.azure.com/openai/deployments/turbo/completions?api-version=2022-12-01"
-          TESTPILOT_LLM_AUTH_HEADERS: '{ "api-key": "${{ secrets.GPT35_API_KEY }}" }'
-          STARCODER_API_ENDPOINT: "${{ secrets.STARCODER_API_ENDPOINT3 }}"
+          TESTPILOT_LLM_API_ENDPOINT: '${{ secrets.TESTPILOT_LLM_API_ENDPOINT }}'
+          TESTPILOT_LLM_AUTH_HEADERS: '{ "api-key": "${{ secrets.TESTPILOT_LLM_AUTH_HEADERS }}" }'
         run: |
           cd testpilot
           outputdir="results/$TESTPILOT_PACKAGE_NAME"
@@ -178,14 +180,15 @@ jobs:
           echo "Generating tests for $TESTPILOT_PACKAGE_NAME"
           node --max-old-space-size=6144 benchmark/run.js \
             --outputDir $outputdir \
-            --database ../db \
             --package "$TESTPILOT_PACKAGE_PATH" \
             --snippets ${{ needs.setup.outputs.snippetsFrom }} \
             --numSnippets ${{ needs.setup.outputs.numSnippets }} \
             --snippetLength ${{ needs.setup.outputs.snippetLength }} \
             --temperatures "${{ needs.setup.outputs.temperatures }}" \
             --numCompletions ${{ needs.setup.outputs.numCompletions }} \
-            --model ${{ needs.setup.outputs.model }}
+            --model ${{ needs.setup.outputs.model }} \
+            --template ${{ needs.setup.outputs.template }} \
+            --retryTemplate ${{ needs.setup.outputs.retryTemplate }} \
           mv stats.json $outputdir
 
       - name: Calculate edit distance of generated tests
