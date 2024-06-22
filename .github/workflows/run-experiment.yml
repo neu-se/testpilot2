@@ -18,9 +18,6 @@ on:
       temperatures:
         description: "Sampling temperatures to try when obtaining completions (whitespace-separated)"
         default: "0.0"
-      numCompletions:
-        description: "Number of completions to generate for each prompt"
-        default: "5"
       model:
         description: "Which LLM API to use"
         type: "choice"
@@ -53,7 +50,6 @@ jobs:
       snippetLength: "${{ github.event.inputs.snippetLength || '20' }}"
       temperatures: "${{ github.event.inputs.temperatures || '0.0' }}"
       numSnippets: "${{ github.event.inputs.numSnippets || 'all' }}"
-      numCompletions: "${{ github.event.inputs.numCompletions || '5' }}"
       model: "${{ github.event.inputs.model || 'llama-3-70b-instruct' }}"
       template: './templates/template.hb'
       retryTemplate: './templates/retry-template.hb'
@@ -185,7 +181,6 @@ jobs:
             --numSnippets ${{ needs.setup.outputs.numSnippets }} \
             --snippetLength ${{ needs.setup.outputs.snippetLength }} \
             --temperatures "${{ needs.setup.outputs.temperatures }}" \
-            --numCompletions ${{ needs.setup.outputs.numCompletions }} \
             --model ${{ needs.setup.outputs.model }} \
             --template ${{ needs.setup.outputs.template }} \
             --retryTemplate ${{ needs.setup.outputs.retryTemplate }} \
