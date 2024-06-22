@@ -142,7 +142,7 @@ if (require.main === module) {
           type: "string",
           demandOption: true,
           default: "llama-3-70b-instruct",
-          description: "LLM api to use",
+          description: "LLM to use",
         },
         template: {
           type: "string",

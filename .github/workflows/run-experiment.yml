@@ -171,7 +171,6 @@ jobs:
         env:
           TESTPILOT_LLM_API_ENDPOINT: '${{ secrets.TESTPILOT_LLM_API_ENDPOINT }}'
           TESTPILOT_LLM_AUTH_HEADERS: '${{ secrets.TESTPILOT_LLM_AUTH_HEADERS }}'
-          TEST_SECRET: '${{ secrets.TEST_SECRET }}'
         run: |
           cd testpilot
           outputdir="results/$TESTPILOT_PACKAGE_NAME"
@@ -179,14 +178,13 @@ jobs:
           echo "Computing package statistics"
           node benchmark/package_stats.js "$TESTPILOT_PACKAGE_PATH" > stats.json
           echo "Generating tests for $TESTPILOT_PACKAGE_NAME"
-          echo "Test secret: $TEST_SECRET"
           node benchmark/run.js \
             --outputDir $outputdir \
             --package "$TESTPILOT_PACKAGE_PATH" \
-            # --snippets ${{ needs.setup.outputs.snippetsFrom }} \
-            # --numSnippets ${{ needs.setup.outputs.numSnippets }} \
-            # --snippetLength ${{ needs.setup.outputs.snippetLength }} \
-            # --temperatures "${{ needs.setup.outputs.temperatures }}" \
+            --snippets ${{ needs.setup.outputs.snippetsFrom }} \
+            --numSnippets ${{ needs.setup.outputs.numSnippets }} \
+            --snippetLength ${{ needs.setup.outputs.snippetLength }} \
+            --temperatures "${{ needs.setup.outputs.temperatures }}" \
             --model ${{ needs.setup.outputs.model }} \
             --template ${{ needs.setup.outputs.template }} \
             --retryTemplate ${{ needs.setup.outputs.retryTemplate }} \
