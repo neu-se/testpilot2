@@ -216,9 +216,9 @@ jobs:
           name: results-${{ steps.pkg-name.outputs.pkgName }}
           path: "testpilot/results.zip"
 
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+      # - name: Setup tmate session
+      #   uses: mxschmitt/action-tmate@v3
+      #   if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
 
   combine_output:
     name: Combine output from all benchmarks
@@ -230,9 +230,9 @@ jobs:
       - name: Download output zips
         uses: actions/download-artifact@v2
 
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+      # - name: Setup tmate session
+      #   uses: mxschmitt/action-tmate@v3
+      #   if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
 
       - name: Combine output zips
         run: |
@@ -280,9 +280,9 @@ jobs:
           name: results-all
           path: baseline
 
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+      # - name: Setup tmate session
+      #   uses: mxschmitt/action-tmate@v3
+      #   if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
 
       - name: Generate report
         run: |
