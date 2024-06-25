@@ -61,10 +61,14 @@ describe("TestGenerator", () => {
     const collector = new BaseTestResultCollector();
     const snippetMap = new Map<string, string[]>();
     snippetMap.set(fun.functionName, snippets);
+    const templateFileName = "templates/template.hb";
+    const retryTemplateFileName = "templates/retry-template.hb";
     const testGenerator = new TestGenerator(
       [0.0],
       Map.prototype.get.bind(snippetMap),
       model,
+      templateFileName,
+      retryTemplateFileName,
       validator,
       collector
     );
@@ -115,20 +119,38 @@ describe("TestGenerator", () => {
 
     await testGenerator.generateAndValidateTests(fun);
 
-    expect(collector.getPromptInfos()).to.deep.equal(expectedPromptInfos);
-    expect(collector.getTestInfos()).to.deep.equal(expectedTestInfos);
+    // sort by key to avoid failures where the order of properties in JSON objects differs
+    expect(sortByKey(collector.getPromptInfos())).to.deep.equal(
+      sortByKey(expectedPromptInfos)
+    );
+    expect(sortByKey(collector.getTestInfos())).to.deep.equal(
+      sortByKey(expectedTestInfos)
+    );
+  }
+
+  function sortByKey(jsonObject: any): any {
+    const keys = Object.keys(jsonObject).sort();
+    let sortedJsonObject: any = {};
+    for (let key of keys) {
+      sortedJsonObject[key] = jsonObject[key];
+    }
   }
 
   it("should handle the straightforward case with a single prompt and a single completion", async () => {
     const fun = APIFunction.fromSignature("string-utils.titleCase(string)");
     const cmp =
       "    assert(stringUtils.titleCase('hello world') === 'Hello World');";
+    const promptOptions = {
+      ...defaultPromptOptions(),
+      templateFileName: "templates/template.hb",
+      retryTemplateFileName: "templates/retry-template.hb",
+    };
     await runSimpleTest(
       fun,
       [],
       [
         {
-          prompt: new Prompt(fun, [], defaultPromptOptions()),
+          prompt: new Prompt(fun, [], promptOptions),
           tests: [{ completion: cmp, passes: true }],
         },
       ]
@@ -141,7 +163,12 @@ describe("TestGenerator", () => {
       "    assert(stringUtils.titleCase('hello world') === 'Hello World');";
     const cmp2 =
       "    assert(stringUtils.titleCase('Hello World') === 'Hello world');";
-    const initialPrompt = new Prompt(fun, [], defaultPromptOptions());
+    const promptOptions = {
+      ...defaultPromptOptions(),
+      templateFileName: "templates/template.hb",
+      retryTemplateFileName: "templates/retry-template.hb",
+    };
+    const initialPrompt = new Prompt(fun, [], promptOptions);
     const provenance = {
       originalPrompt: initialPrompt,
       testId: 1,
@@ -179,14 +206,19 @@ describe("TestGenerator", () => {
       "    assert(stringUtils.titleCase('hello world').result === 'Hello World');";
     const cmp2 =
       "    assert(stringUtils.titleCase('hello world') === 'Hello World');";
-    const initialPrompt = new Prompt(fun, [snippet], defaultPromptOptions());
+    const promptOptions = {
+      ...defaultPromptOptions(),
+      templateFileName: "templates/template.hb",
+      retryTemplateFileName: "templates/retry-template.hb",
+    };
+    const initialPrompt = new Prompt(fun, [snippet], promptOptions);
     const provenance = {
       originalPrompt: initialPrompt,
       testId: 0,
       refiner: "SnippetIncluder",
     };
     const refinedPrompt = new Prompt(fun, [snippet], {
-      ...defaultPromptOptions(),
+      ...promptOptions,
       includeSnippets: true,
     }).withProvenance(provenance);
     const provenance2 = {
@@ -224,14 +256,19 @@ describe("TestGenerator", () => {
     const snippet = "stringUtils.titleCase('hello world')";
     const cmp =
       "    assert(stringUtils.titleCase('hello world') === 'Hello World');";
-    const initialPrompt = new Prompt(fun, [snippet], defaultPromptOptions());
+    const promptOptions = {
+      ...defaultPromptOptions(),
+      templateFileName: "templates/template.hb",
+      retryTemplateFileName: "templates/retry-template.hb",
+    };
+    const initialPrompt = new Prompt(fun, [snippet], promptOptions);
     const provenance = {
       originalPrompt: initialPrompt,
       testId: 0,
       refiner: "SnippetIncluder",
     };
     const refinedPrompt = new Prompt(fun, [snippet], {
-      ...defaultPromptOptions(),
+      ...promptOptions,
       includeSnippets: true,
     }).withProvenance(provenance);
     await runSimpleTest(
@@ -258,7 +295,12 @@ describe("TestGenerator", () => {
       "    assert(stringUtils.titleCase('hello world') === 'Hello World');";
     const cmp2 =
       "    assert(stringUtils.titleCase('Hello world') === 'Hello World');";
-    const initialPrompt = new Prompt(fun, [snippet], defaultPromptOptions());
+    const promptOptions = {
+      ...defaultPromptOptions(),
+      templateFileName: "templates/template.hb",
+      retryTemplateFileName: "templates/retry-template.hb",
+    };
+    const initialPrompt = new Prompt(fun, [snippet], promptOptions);
     const provenance1 = {
       originalPrompt: initialPrompt,
       testId: 1,
@@ -271,7 +313,7 @@ describe("TestGenerator", () => {
     };
     // we get the same refined prompt for both completions
     const refinedPrompt = new Prompt(fun, [snippet], {
-      ...defaultPromptOptions(),
+      ...promptOptions,
       includeSnippets: true,
     }).withProvenance(provenance1, provenance2);
     await runSimpleTest(
@@ -297,8 +339,14 @@ describe("TestGenerator", () => {
     const fun = APIFunction.fromSignature("string-utils.titleCase(string)");
     const snippet = "stringUtils.titleCase('hello world')";
 
+    const promptOptions = {
+      ...defaultPromptOptions(),
+      templateFileName: "templates/template.hb",
+      retryTemplateFileName: "templates/retry-template.hb",
+    };
+
     // pretend we get an invalid completion when running without snippets
-    const initialPrompt = new Prompt(fun, [snippet], defaultPromptOptions());
+    const initialPrompt = new Prompt(fun, [snippet], promptOptions);
     const invalidCmp = "    this isn't a valid completion";
 
     // but we get a valid completion when including snippets
@@ -307,10 +355,16 @@ describe("TestGenerator", () => {
       testId: 0,
       refiner: "SnippetIncluder",
     };
-    const refinedPrompt = new Prompt(fun, [snippet], {
-      ...defaultPromptOptions(),
+    const promptOptionsWithSnippet = {
+      ...promptOptions,
       includeSnippets: true,
-    }).withProvenance(provenance);
+    };
+
+    const refinedPrompt = new Prompt(
+      fun,
+      [snippet],
+      promptOptionsWithSnippet
+    ).withProvenance(provenance);
     const validCmp =
       "    assert(stringUtils.titleCase('hello world') === 'Hello World');";
 
@@ -353,10 +407,14 @@ describe("Test validation", () => {
     const validator = new MockValidator();
     const collector = new BaseTestResultCollector();
     const snippetMap = new Map<string, string[]>();
+    const templateFileName = "templates/template.hb";
+    const retryTemplateFileName = "templates/retry-template.hb";
     const testGenerator = new TestGenerator(
       [0.0],
       Map.prototype.get.bind(snippetMap),
       model,
+      templateFileName,
+      retryTemplateFileName,
       validator,
       collector
     );
