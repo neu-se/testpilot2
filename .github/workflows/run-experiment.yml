@@ -177,14 +177,10 @@ jobs:
           export command="node benchmark/run.js \
             --outputDir $outputdir \
             --package "$TESTPILOT_PACKAGE_PATH" \
-            # --snippets ${{ needs.setup.outputs.snippetsFrom }} \
-            # --numSnippets ${{ needs.setup.outputs.numSnippets }} \
-            # --snippetLength ${{ needs.setup.outputs.snippetLength }} \
             --temperatures "${{ needs.setup.outputs.temperatures }}" \
             --model ${{ needs.setup.outputs.model }} \
             --template ${{ needs.setup.outputs.template }} \
             --retryTemplate ${{ needs.setup.outputs.retryTemplate }}" 
-          # export command="node benchmark/run.js --outputDir $outputdir --package $TESTPILOT_PACKAGE_PATH --database ../db --model ${{ needs.setup.outputs.model }} --template ${{ needs.setup.outputs.template }} --retryTemplate ${{ needs.setup.outputs.retryTemplate }}"
           echo "command: $command"
           $command
           mv stats.json $outputdir
