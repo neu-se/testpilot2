@@ -20,11 +20,7 @@ on:
         default: "0.0"
       model:
         description: "Which LLM API to use"
-        type: "choice"
-        options:
-          - "llama-3-8b-instruct"
-          - "llama-3-70b-instruct"
-          - "mixtral-8x7b-instruct"
+        type: "string"
         default: "llama-3-70b-instruct"
       compareTo:
         description: "Run number of previous run to compare to (leave empty to skip comparison)"
@@ -178,17 +174,17 @@ jobs:
           echo "Computing package statistics"
           node benchmark/package_stats.js "$TESTPILOT_PACKAGE_PATH" > stats.json
           echo "Generating tests for $TESTPILOT_PACKAGE_NAME"
-          # node benchmark/run.js \
-          #   --outputDir $outputdir \
-          #   --package "$TESTPILOT_PACKAGE_PATH" \
-          #   # --snippets ${{ needs.setup.outputs.snippetsFrom }} \
-          #   # --numSnippets ${{ needs.setup.outputs.numSnippets }} \
-          #   # --snippetLength ${{ needs.setup.outputs.snippetLength }} \
-          #   # --temperatures "${{ needs.setup.outputs.temperatures }}" \
-          #   --model ${{ needs.setup.outputs.model }} \
-          #   --template ${{ needs.setup.outputs.template }} \
-          #   --retryTemplate ${{ needs.setup.outputs.retryTemplate }} \
-          export command="node benchmark/run.js --outputDir $outputdir --package $TESTPILOT_PACKAGE_PATH --database ../db --model ${{ needs.setup.outputs.model }} --template ${{ needs.setup.outputs.template }} --retryTemplate ${{ needs.setup.outputs.retryTemplate }}"
+          export command="node benchmark/run.js \
+            --outputDir $outputdir \
+            --package "$TESTPILOT_PACKAGE_PATH" \
+            # --snippets ${{ needs.setup.outputs.snippetsFrom }} \
+            # --numSnippets ${{ needs.setup.outputs.numSnippets }} \
+            # --snippetLength ${{ needs.setup.outputs.snippetLength }} \
+            --temperatures "${{ needs.setup.outputs.temperatures }}" \
+            --model ${{ needs.setup.outputs.model }} \
+            --template ${{ needs.setup.outputs.template }} \
+            --retryTemplate ${{ needs.setup.outputs.retryTemplate }}" 
+          # export command="node benchmark/run.js --outputDir $outputdir --package $TESTPILOT_PACKAGE_PATH --database ../db --model ${{ needs.setup.outputs.model }} --template ${{ needs.setup.outputs.template }} --retryTemplate ${{ needs.setup.outputs.retryTemplate }}"
           echo "command: $command"
           $command
           mv stats.json $outputdir
