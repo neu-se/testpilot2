@@ -153,7 +153,7 @@ export class TestGenerator {
 }
 
 function extractTestFromCompletion(rawCompletion: string): Set<string> {
-  const regExp = /```[^\n\r]*\n((?:.(?!```))*)\n```/gs;
+  const regExp = /```.*?\n(.*?)\n```/gs;
   let match;
   while ((match = regExp.exec(rawCompletion)) !== null) {
     const code = match[1];
