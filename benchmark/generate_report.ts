@@ -26,7 +26,7 @@ function printCoverageReport(
   console.log(`
 # ${title}
 Project | # Snippets Available | # Tests | # Passing Tests |  Statement coverage | Branch coverage | # Non-trivial tests | # Non-trivial passing tests | Statement coverage by non-trivial tests
---- |  --: | --: | --: | --: | --: | --: | --:`);
+--- |  --: | --: | --: | --: | --: | --: | --: | --:`);
   for (const {
     proj,
     nrUniqueSnippets,
