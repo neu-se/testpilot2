@@ -23,7 +23,6 @@ function printCoverageReport(
   title: string,
   stats: CoverageStats | DiffCoverageStats
 ) {
-  console.log(`** stats: ${JSON.stringify(stats)}`);
   console.log(`
 # ${title}
 Project | # Snippets Available | # Tests | # Passing Tests |  Statement coverage | Branch coverage | # Non-trivial tests | # Non-trivial passing tests | Statement coverage by non-trivial tests
