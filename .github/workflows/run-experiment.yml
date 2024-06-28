@@ -77,13 +77,6 @@ jobs:
         with:
           path: testpilot
 
-      - name: Check out CodeQL repo
-        uses: actions/checkout@v3
-        with:
-          repository: github/codeql
-          ref: codeql-cli/v2.10.0
-          path: codeql-repo
-
       - name: Install CodeQL 2.10.0
         run: |
           wget -q https://github.com/github/codeql-cli-binaries/releases/download/v2.10.0/codeql-linux64.zip
@@ -101,6 +94,8 @@ jobs:
         run: |
           cd testpilot
           npm run build
+          cd ql
+          codeql pack install
 
       - name: Checkout github package repo
         if: ${{ matrix.package.host == 'github.com' }}
