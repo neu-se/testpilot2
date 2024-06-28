@@ -241,6 +241,8 @@ console.log(`
 const { coverageStats, failureStats, refinersStats, similarityStats } =
   parseReports(artifactDir);
 
+console.log(`** coverageStats = ${JSON.stringify(coverageStats)}`);  
+
 printCoverageReport("Coverage report", coverageStats);
 printFailureReport("Failure report", failureStats);
 printRefinerReport("Coverage when excluding refiners", refinersStats);
