@@ -242,7 +242,7 @@ const { coverageStats, failureStats, refinersStats, similarityStats } =
 
 printCoverageReport("Coverage report", coverageStats);
 printFailureReport("Failure report", failureStats);
-printRefinerReport("Coverage when excluding refiners", refinersStats);
+// printRefinerReport("Coverage when excluding refiners", refinersStats);
 printSimilarityReport(
   "Similarity of generated tests to existing tests",
   similarityStats
