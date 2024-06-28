@@ -267,6 +267,10 @@ jobs:
           name: results-all
           path: baseline
 
+      - name: print toJson(needs.setup.outputs for debugging
+        run: |
+          echo '${{ toJson(needs.setup.outputs) }}'
+
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
