@@ -39,11 +39,7 @@ Project | # Snippets Available | # Tests | # Passing Tests |  Statement coverage
     nonTrivialCoverage,
   } of Object.values(stats)) {
     console.log(
-      `${proj} | ${nrUniqueSnippets} | ${numTests} | ${numPassing} | 
-        ${percentage(stmtCoverage)} | ${percentage(branchCoverage)} |
-        ${nonTrivialTests} | ${nonTrivialPassing} | ${percentage(
-        nonTrivialCoverage
-      )}`
+      `${proj} | ${nrUniqueSnippets} | ${numTests} | ${numPassing} | ${percentage(stmtCoverage)} | ${percentage(branchCoverage)} | ${nonTrivialTests} | ${nonTrivialPassing} | ${percentage(nonTrivialCoverage)}`
     );
   }
 }
@@ -241,8 +237,6 @@ console.log(`
 
 const { coverageStats, failureStats, refinersStats, similarityStats } =
   parseReports(artifactDir);
-
-console.log(`** coverageStats = ${JSON.stringify(coverageStats)}`);  
 
 printCoverageReport("Coverage report", coverageStats);
 printFailureReport("Failure report", failureStats);
