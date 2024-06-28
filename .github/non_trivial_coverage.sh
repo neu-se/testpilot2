@@ -70,7 +70,7 @@ codeql bqrs decode --format json $dbdir/RefinerContributions.bqrs | \
       "key": .[1],
       "value": {
         "passingTests": .[2],
-        "coverage": .[3],
+        "stmtCoverage": .[3],
         "nonTrivialCoverage": .[4]
       }
     }
