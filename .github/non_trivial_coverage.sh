@@ -61,17 +61,17 @@ report.coverage.total.statements.nonTrivialPct = Math.floor(nonTriviallyCoveredS
 fs.writeFileSync('$output', JSON.stringify(report, null, 2));
 EOF
 
-echo "Running query for computing per-refiner statistics..."
-codeql query run --output $dbdir/RefinerContributions.bqrs -d $dbdir $MY_DIR/../ql/queries/RefinerContributions.ql
-codeql bqrs decode --format json $dbdir/RefinerContributions.bqrs | \
-  jq '[
-    .["#select"].tuples[] |
-    {
-      "key": .[1],
-      "value": {
-        "passingTests": .[2],
-        "coverage": .[3],
-        "nonTrivialCoverage": .[4]
-      }
-    }
-  ] | from_entries' >$1/refiners.json
+# echo "Running query for computing per-refiner statistics..."
+# codeql query run --output $dbdir/RefinerContributions.bqrs -d $dbdir $MY_DIR/../ql/queries/RefinerContributions.ql
+# codeql bqrs decode --format json $dbdir/RefinerContributions.bqrs | \
+#   jq '[
+#     .["#select"].tuples[] |
+#     {
+#       "key": .[1],
+#       "value": {
+#         "passingTests": .[2],
+#         "coverage": .[3],
+#         "nonTrivialCoverage": .[4]
+#       }
+#     }
+#   ] | from_entries' >$1/refiners.json
