@@ -290,4 +290,6 @@ jobs:
           else
             baseline_artifact=''
           fi
-          node ${GITHUB_WORKSPACE}/benchmark/generate_report.js config.json results/results $baseline_artifact > $GITHUB_STEP_SUMMARY
+          # node ${GITHUB_WORKSPACE}/benchmark/generate_report.js config.json results/results $baseline_artifact > $GITHUB_STEP_SUMMARY
+          # add model as first parameter
+          node ${GITHUB_WORKSPACE}/benchmark/generate_report.js ${{ needs.setup.outputs.model }} config.json results/results $baseline_artifact > $GITHUB_STEP_SUMMARY
