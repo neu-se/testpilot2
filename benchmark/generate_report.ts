@@ -23,6 +23,7 @@ function printCoverageReport(
   title: string,
   stats: CoverageStats | DiffCoverageStats
 ) {
+  console.log(`** stats: ${JSON.stringify(stats)}`);
   console.log(`
 # ${title}
 Project | # Snippets Available | # Tests | # Passing Tests |  Statement coverage | Branch coverage | # Non-trivial tests | # Non-trivial passing tests | Statement coverage by non-trivial tests
@@ -231,10 +232,10 @@ const baselineArtifactDir = hasConfig ? process.argv[5] : process.argv[4];
 console.log(`
 # Parameters
 - model: ${model}
+- temperatures: ${config.temperatures}
 - snippets from: ${config.snippetsFrom}
 - snippet length: ${config.snippetLength}
 - numSnippets: ${config.numSnippets}
-- temperatures: ${config.temperatures}
 - number of completions: ${config.numCompletions}`);
 
 const { coverageStats, failureStats, refinersStats, similarityStats } =
