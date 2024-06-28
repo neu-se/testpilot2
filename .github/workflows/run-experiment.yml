@@ -77,20 +77,20 @@ jobs:
         with:
           path: testpilot
 
-      # - name: Check out CodeQL repo
-      #   uses: actions/checkout@v3
-      #   with:
-      #     repository: github/codeql
-      #     ref: codeql-cli/v2.10.0
-      #     path: codeql-repo
+      - name: Check out CodeQL repo
+        uses: actions/checkout@v3
+        with:
+          repository: github/codeql
+          ref: codeql-cli/v2.10.0
+          path: codeql-repo
 
-      # - name: Install CodeQL 2.10.0
-      #   run: |
-      #     wget -q https://github.com/github/codeql-cli-binaries/releases/download/v2.10.0/codeql-linux64.zip
-      #     unzip codeql-linux64.zip
-      #     echo "$GITHUB_WORKSPACE/codeql" >> $GITHUB_PATH
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install CodeQL 2.10.0
+        run: |
+          wget -q https://github.com/github/codeql-cli-binaries/releases/download/v2.10.0/codeql-linux64.zip
+          unzip codeql-linux64.zip
+          echo "$GITHUB_WORKSPACE/codeql" >> $GITHUB_PATH
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
@@ -154,10 +154,10 @@ jobs:
           npm run build || npm run prepack || echo 'Error with npm run build and npm run prepack'
           npm i --no-save mocha
 
-      # - name: Create CodeQL database
-      #   if: ${{ needs.setup.outputs.snippetsFrom == 'code' || needs.setup.outputs.snippetsFrom == 'both' }}
-      #   run: |
-      #     codeql database create --language=javascript "--source-root=$TESTPILOT_PACKAGE_PATH" -- ./db
+      - name: Create CodeQL database
+        if: ${{ needs.setup.outputs.snippetsFrom == 'code' || needs.setup.outputs.snippetsFrom == 'both' }}
+        run: |
+          codeql database create --language=javascript "--source-root=$TESTPILOT_PACKAGE_PATH" -- ./db
 
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
@@ -192,10 +192,10 @@ jobs:
           node benchmark/editDistance.js --generatedTestsDir  $outputdir --existingTestsDir $TESTPILOT_PACKAGE_PATH --pkgName $TESTPILOT_PACKAGE_NAME
           mv similarityReport.json $outputdir
 
-      # - name: Add non-trivial coverage data
-      #   run: |
-      #     cd testpilot
-      #     ./.github/non_trivial_coverage.sh "results/$TESTPILOT_PACKAGE_NAME"
+      - name: Add non-trivial coverage data
+        run: |
+          cd testpilot
+          ./.github/non_trivial_coverage.sh "results/$TESTPILOT_PACKAGE_NAME"
 
       - name: Zip up results
         run: |
