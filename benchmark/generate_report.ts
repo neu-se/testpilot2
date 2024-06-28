@@ -25,22 +25,23 @@ function printCoverageReport(
 ) {
   console.log(`
 # ${title}
-Project | # Snippets Available | # Tests | # Passing Tests |  Statement coverage | # Non-trivial tests | # Non-trivial passing tests | Statement coverage by non-trivial tests
+Project | # Snippets Available | # Tests | # Passing Tests |  Statement coverage | Branch coverage | # Non-trivial tests | # Non-trivial passing tests | Statement coverage by non-trivial tests
 --- |  --: | --: | --: | --: | --: | --: | --:`);
   for (const {
     proj,
     nrUniqueSnippets,
     numTests,
     numPassing,
-    coverage,
+    stmtCoverage,
+    branchCoverage,
     nonTrivialTests,
     nonTrivialPassing,
     nonTrivialCoverage,
   } of Object.values(stats)) {
     console.log(
-      `${proj} | ${nrUniqueSnippets} | ${numTests} | ${numPassing} | ${percentage(
-        coverage
-      )} | ${nonTrivialTests} | ${nonTrivialPassing} | ${percentage(
+      `${proj} | ${nrUniqueSnippets} | ${numTests} | ${numPassing} | 
+        ${percentage(stmtCoverage)} | ${percentage(branchCoverage)} |
+        ${nonTrivialTests} | ${nonTrivialPassing} | ${percentage(
         nonTrivialCoverage
       )}`
     );
