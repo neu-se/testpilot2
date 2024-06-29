@@ -39,7 +39,13 @@ Project | # Snippets Available | # Tests | # Passing Tests |  Statement coverage
     nonTrivialCoverage,
   } of Object.values(stats)) {
     console.log(
-      `${proj} | ${nrUniqueSnippets} | ${numTests} | ${numPassing} | ${percentage(stmtCoverage)} | ${percentage(branchCoverage)} | ${nonTrivialTests} | ${nonTrivialPassing} | ${percentage(nonTrivialCoverage)}`
+      `${proj} | ${nrUniqueSnippets} | ${numTests} | ${numPassing} | ${percentage(
+        stmtCoverage
+      )} | ${percentage(
+        branchCoverage
+      )} | ${nonTrivialTests} | ${nonTrivialPassing} | ${percentage(
+        nonTrivialCoverage
+      )}`
     );
   }
 }
