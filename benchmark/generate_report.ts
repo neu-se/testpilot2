@@ -234,8 +234,7 @@ console.log(`
 - temperatures: ${config.temperatures}
 - snippets from: ${config.snippetsFrom}
 - snippet length: ${config.snippetLength}
-- numSnippets: ${config.numSnippets}
-- number of completions: ${config.numCompletions}`);
+- numSnippets: ${config.numSnippets}`);
 
 const { coverageStats, failureStats, refinersStats, similarityStats } =
   parseReports(artifactDir);
