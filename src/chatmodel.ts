@@ -1,6 +1,7 @@
 import axios from "axios";
 import { performance } from "perf_hooks";
 import { ICompletionModel } from "./completionModel";
+import { retry } from "./promise-utils";
 
 const defaultPostOptions = {
   max_tokens: 1000, // maximum number of tokens to return
@@ -27,7 +28,8 @@ export class ChatModel implements ICompletionModel {
 
   constructor(
     private readonly model: string,
-    private readonly instanceOptions: PostOptions = {}
+    private readonly instanceOptions: PostOptions = {},
+    private readonly nrAttempts: number = 3
   ) {
     this.apiEndpoint = getEnv("TESTPILOT_LLM_API_ENDPOINT");
     this.authHeaders = getEnv("TESTPILOT_LLM_AUTH_HEADERS");
@@ -75,7 +77,7 @@ export class ChatModel implements ICompletionModel {
       ...options,
     };
 
-    const res = await axios.post(this.apiEndpoint, postOptions, { headers });
+    const res = await retry( () => axios.post(this.apiEndpoint, postOptions, { headers }), this.nrAttempts);
 
     performance.measure(
       `llm-query:${JSON.stringify({
