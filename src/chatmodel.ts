@@ -3,7 +3,7 @@ import { performance } from "perf_hooks";
 import { ICompletionModel } from "./completionModel";
 
 const defaultPostOptions = {
-  max_tokens: 500, // maximum number of tokens to return
+  max_tokens: 1000, // maximum number of tokens to return
   temperature: 0, // sampling temperature; higher values increase diversity
   top_p: 1, // no need to change this
 };

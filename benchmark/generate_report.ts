@@ -25,21 +25,24 @@ function printCoverageReport(
 ) {
   console.log(`
 # ${title}
-Project | # Snippets Available | # Tests | # Passing Tests |  Statement coverage | # Non-trivial tests | # Non-trivial passing tests | Statement coverage by non-trivial tests
---- |  --: | --: | --: | --: | --: | --: | --:`);
+Project | # Snippets Available | # Tests | # Passing Tests |  Statement coverage | Branch coverage | # Non-trivial tests | # Non-trivial passing tests | Statement coverage by non-trivial tests
+--- |  --: | --: | --: | --: | --: | --: | --: | --:`);
   for (const {
     proj,
     nrUniqueSnippets,
     numTests,
     numPassing,
-    coverage,
+    stmtCoverage,
+    branchCoverage,
     nonTrivialTests,
     nonTrivialPassing,
     nonTrivialCoverage,
   } of Object.values(stats)) {
     console.log(
       `${proj} | ${nrUniqueSnippets} | ${numTests} | ${numPassing} | ${percentage(
-        coverage
+        stmtCoverage
+      )} | ${percentage(
+        branchCoverage
       )} | ${nonTrivialTests} | ${nonTrivialPassing} | ${percentage(
         nonTrivialCoverage
       )}`
@@ -217,33 +220,34 @@ function ppDiff(d: number | string, lowerIsBetter = false) {
   }
 }
 
-if (process.argv.length < 3 || process.argv.length > 5) {
+if (process.argv.length < 4 || process.argv.length > 6) {
   console.error(
-    "Usage: node generate_report.js [<config.json>] <artifact_dir> [<baseline_artifact_dir>]"
+    "Usage: node generate_report.js model [<config.json>] <artifact_dir> [<baseline_artifact_dir>]"
   );
   process.exit(1);
 }
-const hasConfig = fs.lstatSync(process.argv[2]).isFile();
+const model = process.argv[2];
+const hasConfig = fs.lstatSync(process.argv[3]).isFile();
 const config = hasConfig
-  ? JSON.parse(fs.readFileSync(process.argv[2], "utf8"))
+  ? JSON.parse(fs.readFileSync(process.argv[3], "utf8"))
   : {};
-const artifactDir = hasConfig ? process.argv[3] : process.argv[2];
-const baselineArtifactDir = hasConfig ? process.argv[4] : process.argv[3];
+const artifactDir = hasConfig ? process.argv[4] : process.argv[2];
+const baselineArtifactDir = hasConfig ? process.argv[5] : process.argv[4];
 
 console.log(`
 # Parameters
+- model: ${model}
+- temperatures: ${config.temperatures}
 - snippets from: ${config.snippetsFrom}
 - snippet length: ${config.snippetLength}
-- numSnippets: ${config.numSnippets}
-- temperatures: ${config.temperatures}
-- number of completions: ${config.numCompletions}`);
+- numSnippets: ${config.numSnippets}`);
 
 const { coverageStats, failureStats, refinersStats, similarityStats } =
   parseReports(artifactDir);
 
 printCoverageReport("Coverage report", coverageStats);
 printFailureReport("Failure report", failureStats);
-printRefinerReport("Coverage when excluding refiners", refinersStats);
+// printRefinerReport("Coverage when excluding refiners", refinersStats);
 printSimilarityReport(
   "Similarity of generated tests to existing tests",
   similarityStats
