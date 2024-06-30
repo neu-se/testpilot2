@@ -21,7 +21,7 @@ on:
       model:
         description: "Which LLM API to use"
         type: "string"
-        default: "llama-3-70b-instruct"
+        default: "meta-llama-3-70b-instruct"
       compareTo:
         description: "Run number of previous run to compare to (leave empty to skip comparison)"
         default: ""
