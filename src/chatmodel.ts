@@ -87,11 +87,8 @@ export class ChatModel implements ICompletionModel {
 
     const postOptions = {
       model: this.model,
+      system: "You are a programming assistant.",
       messages: [
-        {
-          role: "system",
-          content: "You are a programming assistant.",
-        },
         {
           role: "user",
           content: prompt,
@@ -138,8 +135,8 @@ export class ChatModel implements ICompletionModel {
     }
 
     const completions = new Set<string>();
-    for (const choice of json.choices) {
-      const content = choice.message.content;
+    for (const choice of json.content) {
+      const content = choice.text;
       completions.add(content);
     }
     return completions;
