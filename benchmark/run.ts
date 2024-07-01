@@ -180,7 +180,7 @@ if (require.main === module) {
           demandOption: false,
           description:
             "use custom rate-limiting for benchmarking (if specified, this supercedes the rateLimit option)",
-        }
+        },
       });
     const argv = await parser.argv;
 
@@ -191,7 +191,13 @@ if (require.main === module) {
           "Warning: --strictResponses has no effect when not using --responses"
         );
       }
-      model = new ChatModel(argv.model, argv.nrAttempts, argv.rateLimit, argv.benchmark, { max_tokens: argv.maxTokens } );
+      model = new ChatModel(
+        argv.model,
+        argv.nrAttempts,
+        argv.rateLimit,
+        argv.benchmark,
+        { max_tokens: argv.maxTokens }
+      );
     } else {
       model = MockCompletionModel.fromFile(
         argv.responses,
