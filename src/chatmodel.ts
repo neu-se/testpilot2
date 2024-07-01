@@ -114,8 +114,7 @@ export class ChatModel implements ICompletionModel {
   }
 
   /**
-   * Get completions from the LLM, extract the code fragments enclosed in a fenced code block,
-   * and postprocess them as needed; print a warning if it did not produce any
+   * Get completions from the LLM; issue a warning if it did not produce any
    *
    * @param prompt the prompt to use
    */
