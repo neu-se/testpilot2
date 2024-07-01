@@ -121,6 +121,12 @@ if (require.main === module) {
           default: 20,
           description: "maximum length of each snippet in lines",
         },
+        maxTokens: {
+          type: "number",
+          default: 1000,
+          demandOption: false,
+          description: "maximum number of tokens in a completion",
+        },
         temperatures: {
           type: "string",
           default: "0.0",
@@ -156,6 +162,25 @@ if (require.main === module) {
           default: "./templates/retry-template.hb",
           description: "Handlebars template file to use",
         },
+        nrAttempts: {
+          type: "number",
+          default: 3,
+          description: "number of attempts to make for each request",
+        },
+        rateLimit: {
+          type: "number",
+          default: 0,
+          demandOption: false,
+          description:
+            "number of milliseconds between requests to the model (0 is no rate limit)",
+        },
+        benchmark: {
+          type: "boolean",
+          default: false,
+          demandOption: false,
+          description:
+            "use custom rate-limiting for benchmarking (if specified, this supercedes the rateLimit option)",
+        }
       });
     const argv = await parser.argv;
 
@@ -166,7 +191,7 @@ if (require.main === module) {
           "Warning: --strictResponses has no effect when not using --responses"
         );
       }
-      model = new ChatModel(argv.model);
+      model = new ChatModel(argv.model, argv.nrAttempts, argv.rateLimit, argv.benchmark, { max_tokens: argv.maxTokens } );
     } else {
       model = MockCompletionModel.fromFile(
         argv.responses,

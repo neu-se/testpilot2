@@ -1,7 +1,7 @@
 import axios from "axios";
 import { performance } from "perf_hooks";
 import { ICompletionModel } from "./completionModel";
-import { retry, RateLimiter, BenchmarkRateLimiter } from "./promise-utils";
+import { retry, RateLimiter, BenchmarkRateLimiter, FixedRateLimiter } from "./promise-utils";
 
 const defaultPostOptions = {
   max_tokens: 1000, // maximum number of tokens to return
@@ -25,17 +25,28 @@ function getEnv(name: string): string {
 export class ChatModel implements ICompletionModel {
   private readonly apiEndpoint: string;
   private readonly authHeaders: string;
-  protected rateLimiter: RateLimiter;
+  protected rateLimiter: RateLimiter | undefined;
 
   constructor(
     private readonly model: string,
+    private readonly nrAttempts: number,
+    private readonly rateLimit: number,
+    private readonly benchmark: boolean,
     private readonly instanceOptions: PostOptions = {},
-    private readonly nrAttempts: number = 3
   ) {
     this.apiEndpoint = getEnv("TESTPILOT_LLM_API_ENDPOINT");
     this.authHeaders = getEnv("TESTPILOT_LLM_AUTH_HEADERS");
-    this.rateLimiter = new BenchmarkRateLimiter();
-    console.log(`Using ${this.model} at ${this.apiEndpoint}`);
+    if (this.benchmark) {
+      this.rateLimiter = new BenchmarkRateLimiter();
+      console.log(`Using ${this.model} at ${this.apiEndpoint} with ${this.nrAttempts} attempts and benchmark rate limit.`);
+    } else if (this.rateLimit > 0) {
+      this.rateLimiter = new FixedRateLimiter(this.rateLimit);
+      console.log(`Using ${this.model} at ${this.apiEndpoint} with ${this.nrAttempts} attempts and fixed rate of ${this.rateLimit} ms.`);
+    } else {
+      this.rateLimiter = undefined;
+      console.log(`Using ${this.model} at ${this.apiEndpoint} with ${this.nrAttempts} attempts and no rate limit.`);
+    }
+    
   }
 
   /**
@@ -79,10 +90,15 @@ export class ChatModel implements ICompletionModel {
       ...options,
     };
 
-    const res = await retry( () => 
-      this.rateLimiter.next(() => axios.post(this.apiEndpoint, postOptions, { headers })), 
-      this.nrAttempts
-    );
+    let res;
+    if (this.rateLimiter) {
+      res = await retry( () => 
+        this.rateLimiter!.next(() => axios.post(this.apiEndpoint, postOptions, { headers })), 
+        this.nrAttempts
+      );
+    } else {
+      res = await retry( () => axios.post(this.apiEndpoint, postOptions, { headers }), this.nrAttempts);
+    }
 
     performance.measure(
       `llm-query:${JSON.stringify({

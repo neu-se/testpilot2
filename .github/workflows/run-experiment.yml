@@ -29,6 +29,10 @@ on:
         description: "Skip slow benchmarks"
         type: boolean
         default: false
+      benchmarkMode:
+        type: boolean
+        description: "Use custom rate limiting for running benchmarks"
+        default: false
       debug_enabled:
         type: boolean
         description: "Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)"
@@ -175,7 +179,8 @@ jobs:
             --temperatures "${{ needs.setup.outputs.temperatures }}" \
             --model ${{ needs.setup.outputs.model }} \
             --template ${{ needs.setup.outputs.template }} \
-            --retryTemplate ${{ needs.setup.outputs.retryTemplate }}" 
+            --retryTemplate ${{ needs.setup.outputs.retryTemplate }} \
+            --benchmark ${{ github.event.inputs.benchmarkMode }} \" 
           echo "command: $command"
           $command
           mv stats.json $outputdir
