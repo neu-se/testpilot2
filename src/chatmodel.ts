@@ -1,7 +1,7 @@
 import axios from "axios";
 import { performance } from "perf_hooks";
 import { ICompletionModel } from "./completionModel";
-import { retry } from "./promise-utils";
+import { retry, RateLimiter, BenchmarkRateLimiter } from "./promise-utils";
 
 const defaultPostOptions = {
   max_tokens: 1000, // maximum number of tokens to return
@@ -25,6 +25,7 @@ function getEnv(name: string): string {
 export class ChatModel implements ICompletionModel {
   private readonly apiEndpoint: string;
   private readonly authHeaders: string;
+  protected rateLimiter: RateLimiter;
 
   constructor(
     private readonly model: string,
@@ -33,7 +34,8 @@ export class ChatModel implements ICompletionModel {
   ) {
     this.apiEndpoint = getEnv("TESTPILOT_LLM_API_ENDPOINT");
     this.authHeaders = getEnv("TESTPILOT_LLM_AUTH_HEADERS");
-    console.log(`Using Chat Model API at ${this.apiEndpoint}`);
+    this.rateLimiter = new BenchmarkRateLimiter();
+    console.log(`Using ${this.model} at ${this.apiEndpoint}`);
   }
 
   /**
@@ -77,7 +79,10 @@ export class ChatModel implements ICompletionModel {
       ...options,
     };
 
-    const res = await retry( () => axios.post(this.apiEndpoint, postOptions, { headers }), this.nrAttempts);
+    const res = await retry( () => 
+      this.rateLimiter.next(() => axios.post(this.apiEndpoint, postOptions, { headers })), 
+      this.nrAttempts
+    );
 
     performance.measure(
       `llm-query:${JSON.stringify({
