@@ -180,7 +180,7 @@ jobs:
             --model ${{ needs.setup.outputs.model }} \
             --template ${{ needs.setup.outputs.template }} \
             --retryTemplate ${{ needs.setup.outputs.retryTemplate }} \
-            --benchmark ${{ github.event.inputs.benchmarkMode }} \" 
+            --benchmark ${{ github.event.inputs.benchmarkMode }} " 
           echo "command: $command"
           $command
           mv stats.json $outputdir
