@@ -14,12 +14,16 @@ import {
   TestValidator,
 } from "..";
 import { ChatModel } from "../src/chatmodel";
-import yargs from "yargs";
+import yargs, { parse } from "yargs";
 import { hideBin } from "yargs/helpers";
 import { PerformanceMeasurer } from "./performanceMeasurer";
 import { TestResultCollector } from "./testResultCollector";
-require("console-stamp")(console);
-
+import {
+  BenchmarkRateLimiter,
+  FixedRateLimiter,
+  IRateLimiter,
+  NoRateLimiter,
+} from "../src/promise-utils";
 /**
  * Run an end-to-end experiment.
  * Given a package generate tests for its methods, run them, and generate a report.
@@ -121,6 +125,12 @@ if (require.main === module) {
           default: 20,
           description: "maximum length of each snippet in lines",
         },
+        maxTokens: {
+          type: "number",
+          default: 1000,
+          demandOption: false,
+          description: "maximum number of tokens in a completion",
+        },
         temperatures: {
           type: "string",
           default: "0.0",
@@ -156,6 +166,17 @@ if (require.main === module) {
           default: "./templates/retry-template.hb",
           description: "Handlebars template file to use",
         },
+        nrAttempts: {
+          type: "number",
+          default: 3,
+          description: "number of attempts to make for each request",
+        },
+        rateLimit: {
+          type: "string",
+          default: "",
+          demandOption: false,
+          description: 'number of milliseconds between prompts or "benchmark"',
+        },
       });
     const argv = await parser.argv;
 
@@ -166,7 +187,24 @@ if (require.main === module) {
           "Warning: --strictResponses has no effect when not using --responses"
         );
       }
-      model = new ChatModel(argv.model);
+
+      let rateLimiter: IRateLimiter;
+      if (argv.rateLimit === "benchmark") {
+        rateLimiter = new BenchmarkRateLimiter();
+      } else if (argv.rateLimit) {
+        const rateLimit: number = parseInt(argv.rateLimit, 10);
+        if (!Number.isNaN(rateLimit)) {
+          rateLimiter = new FixedRateLimiter(+argv.rateLimit);
+        } else {
+          throw new Error(`Invalid rate limit: ${argv.rateLimit}`);
+        }
+      } else {
+        rateLimiter = new NoRateLimiter();
+      }
+
+      model = new ChatModel(argv.model, argv.nrAttempts, rateLimiter, {
+        max_tokens: argv.maxTokens,
+      });
     } else {
       model = MockCompletionModel.fromFile(
         argv.responses,

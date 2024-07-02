@@ -29,6 +29,10 @@ on:
         description: "Skip slow benchmarks"
         type: boolean
         default: false
+      rateLimiting:
+        type: boolean
+        description: "Use rate limiting"
+        default: false
       debug_enabled:
         type: boolean
         description: "Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)"
@@ -169,13 +173,26 @@ jobs:
           echo "Computing package statistics"
           node benchmark/package_stats.js "$TESTPILOT_PACKAGE_PATH" > stats.json
           echo "Generating tests for $TESTPILOT_PACKAGE_NAME"
-          export command="node benchmark/run.js \
+
+          if (${{ github.event.inputs.rateLimiting }}); then
+            export command="node benchmark/run.js \
             --outputDir $outputdir \
             --package "$TESTPILOT_PACKAGE_PATH" \
             --temperatures "${{ needs.setup.outputs.temperatures }}" \
             --model ${{ needs.setup.outputs.model }} \
             --template ${{ needs.setup.outputs.template }} \
-            --retryTemplate ${{ needs.setup.outputs.retryTemplate }}" 
+            --retryTemplate ${{ needs.setup.outputs.retryTemplate }} \
+            --rateLimit benchmark"
+          else
+            export command="node benchmark/run.js \
+            --outputDir $outputdir \
+            --package "$TESTPILOT_PACKAGE_PATH" \
+            --temperatures "${{ needs.setup.outputs.temperatures }}" \
+            --model ${{ needs.setup.outputs.model }} \
+            --template ${{ needs.setup.outputs.template }} \
+            --retryTemplate ${{ needs.setup.outputs.retryTemplate }}"
+          fi
+           
           echo "command: $command"
           $command
           mv stats.json $outputdir

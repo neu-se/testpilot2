@@ -1,6 +1,13 @@
 import axios from "axios";
 import { performance } from "perf_hooks";
 import { ICompletionModel } from "./completionModel";
+import {
+  retry,
+  RateLimiter,
+  BenchmarkRateLimiter,
+  FixedRateLimiter,
+  IRateLimiter,
+} from "./promise-utils";
 
 const defaultPostOptions = {
   max_tokens: 1000, // maximum number of tokens to return
@@ -27,11 +34,18 @@ export class ChatModel implements ICompletionModel {
 
   constructor(
     private readonly model: string,
+    private readonly nrAttempts: number,
+    private readonly rateLimiter: IRateLimiter,
     private readonly instanceOptions: PostOptions = {}
   ) {
     this.apiEndpoint = getEnv("TESTPILOT_LLM_API_ENDPOINT");
     this.authHeaders = getEnv("TESTPILOT_LLM_AUTH_HEADERS");
-    console.log(`Using Chat Model API at ${this.apiEndpoint}`);
+
+    console.log(
+      `Using ${this.model} at ${this.apiEndpoint} with ${
+        this.nrAttempts
+      } attempts and ${this.rateLimiter.getDescription()}`
+    );
   }
 
   /**
@@ -75,7 +89,13 @@ export class ChatModel implements ICompletionModel {
       ...options,
     };
 
-    const res = await axios.post(this.apiEndpoint, postOptions, { headers });
+    const res = await retry(
+      () =>
+        this.rateLimiter!.next(() =>
+          axios.post(this.apiEndpoint, postOptions, { headers })
+        ),
+      this.nrAttempts
+    );
 
     performance.measure(
       `llm-query:${JSON.stringify({
@@ -107,8 +127,7 @@ export class ChatModel implements ICompletionModel {
   }
 
   /**
-   * Get completions from the LLM, extract the code fragments enclosed in a fenced code block,
-   * and postprocess them as needed; print a warning if it did not produce any
+   * Get completions from the LLM; issue a warning if it did not produce any
    *
    * @param prompt the prompt to use
    */
