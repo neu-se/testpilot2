@@ -6,6 +6,7 @@ import {
   RateLimiter,
   BenchmarkRateLimiter,
   FixedRateLimiter,
+  IRateLimiter,
 } from "./promise-utils";
 
 const defaultPostOptions = {
@@ -30,33 +31,19 @@ function getEnv(name: string): string {
 export class ChatModel implements ICompletionModel {
   private readonly apiEndpoint: string;
   private readonly authHeaders: string;
-  protected rateLimiter: RateLimiter | undefined;
 
   constructor(
     private readonly model: string,
     private readonly nrAttempts: number,
-    private readonly rateLimit: number,
-    private readonly benchmark: boolean,
+    private readonly rateLimiter: IRateLimiter,
     private readonly instanceOptions: PostOptions = {}
   ) {
     this.apiEndpoint = getEnv("TESTPILOT_LLM_API_ENDPOINT");
     this.authHeaders = getEnv("TESTPILOT_LLM_AUTH_HEADERS");
-    if (this.benchmark) {
-      this.rateLimiter = new BenchmarkRateLimiter();
-      console.log(
-        `Using ${this.model} at ${this.apiEndpoint} with ${this.nrAttempts} attempts and benchmark rate limit.`
-      );
-    } else if (this.rateLimit > 0) {
-      this.rateLimiter = new FixedRateLimiter(this.rateLimit);
-      console.log(
-        `Using ${this.model} at ${this.apiEndpoint} with ${this.nrAttempts} attempts and fixed rate of ${this.rateLimit} ms.`
-      );
-    } else {
-      this.rateLimiter = undefined;
-      console.log(
-        `Using ${this.model} at ${this.apiEndpoint} with ${this.nrAttempts} attempts and no rate limit.`
-      );
-    }
+    
+    console.log(
+       `Using ${this.model} at ${this.apiEndpoint} with ${this.nrAttempts} attempts and ${this.rateLimiter.getDescription()}`
+    );
   }
 
   /**
@@ -87,8 +74,11 @@ export class ChatModel implements ICompletionModel {
 
     const postOptions = {
       model: this.model,
-      system: "You are a programming assistant.",
       messages: [
+        {
+          role: "system",
+          content: "You are a programming assistant."
+        },
         {
           role: "user",
           content: prompt,
@@ -97,21 +87,14 @@ export class ChatModel implements ICompletionModel {
       ...options,
     };
 
-    let res;
-    if (this.rateLimiter) {
-      res = await retry(
-        () =>
-          this.rateLimiter!.next(() =>
-            axios.post(this.apiEndpoint, postOptions, { headers })
-          ),
-        this.nrAttempts
-      );
-    } else {
-      res = await retry(
-        () => axios.post(this.apiEndpoint, postOptions, { headers }),
-        this.nrAttempts
-      );
-    }
+    const res = await retry(
+      () =>
+        this.rateLimiter!.next(() =>
+          axios.post(this.apiEndpoint, postOptions, { headers })
+        ),
+      this.nrAttempts
+    );
+    
 
     performance.measure(
       `llm-query:${JSON.stringify({
@@ -135,8 +118,8 @@ export class ChatModel implements ICompletionModel {
     }
 
     const completions = new Set<string>();
-    for (const choice of json.content) {
-      const content = choice.text;
+    for (const choice of json.choices) {
+      const content = choice.message.content;
       completions.add(content);
     }
     return completions;

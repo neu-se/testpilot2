@@ -27,12 +27,29 @@ export async function retry<T>(
 }
 
 /**
+ * This interface provides supports for retrying the creation of a promise
+ */
+export interface IRateLimiter {
+  
+  /**
+   * Waits until the rate limiter allows the next request, then evaluate the function that
+   * produces the promise
+   */
+  next<T>(p: () => Promise<T>): Promise<T>;
+  
+  /**
+   * returns a description of the rate limiter
+   */
+  getDescription(): string;
+}
+
+/**
  * This class provides supports for asynchronous rate limiting by
  * limiting the number of requests to the server to at most one
  * in N milliseconds. This is useful for throttling requests to
  * a server that has a limit on the number of requests per second.
  */
-export abstract class RateLimiter {
+export abstract class RateLimiter implements IRateLimiter {
   constructor(protected howManyMilliSeconds: number) {
     this.timer = this.resetTimer();
   }
@@ -54,6 +71,8 @@ export abstract class RateLimiter {
     return p(); // return the promise
   }
 
+  public abstract getDescription(): string;
+
   /**
    * resets the timer
    * @returns a promise that is resolved after the number of milliseconds
@@ -72,9 +91,16 @@ export abstract class RateLimiter {
  * maximum of one per N milliseconds.
  *
  */
-export class FixedRateLimiter extends RateLimiter {
+export class FixedRateLimiter extends RateLimiter implements IRateLimiter {
   public constructor(N: number) {
     super(N);
+  }
+
+  /**
+   * returns a description of the rate limiter
+   */
+  public getDescription(): string {
+    return `FixedRateLimiter (1 request per ${this.howManyMilliSeconds} ms)`;
   }
 }
 
@@ -111,5 +137,28 @@ export class BenchmarkRateLimiter extends RateLimiter {
       );
     }
     return super.next(p);
+  }
+
+  /**
+   * returns a description of the rate limiter
+   */
+  public getDescription(): string {
+    return `BenchmarkRateLimiter (increasing pace after 150 and 300 requests)`;
+  }
+}
+
+/**
+ * A rate limiter that does not limit the rate of requests to the server.
+ */
+export class NoRateLimiter implements IRateLimiter {
+  public async next<T>(p: () => Promise<T>): Promise<T> {
+    return p();
+  }
+
+  /**
+   * returns a description of the rate limiter
+   */
+  public getDescription(): string {
+    return `NoRateLimiter`;
   }
 }
