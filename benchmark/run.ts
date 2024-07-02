@@ -18,7 +18,12 @@ import yargs, { parse } from "yargs";
 import { hideBin } from "yargs/helpers";
 import { PerformanceMeasurer } from "./performanceMeasurer";
 import { TestResultCollector } from "./testResultCollector";
-import { BenchmarkRateLimiter, FixedRateLimiter, IRateLimiter, NoRateLimiter } from "../src/promise-utils";
+import {
+  BenchmarkRateLimiter,
+  FixedRateLimiter,
+  IRateLimiter,
+  NoRateLimiter,
+} from "../src/promise-utils";
 /**
  * Run an end-to-end experiment.
  * Given a package generate tests for its methods, run them, and generate a report.
@@ -170,8 +175,7 @@ if (require.main === module) {
           type: "string",
           default: "",
           demandOption: false,
-          description:
-            "number of milliseconds between prompts or \"benchmark\"",
+          description: 'number of milliseconds between prompts or "benchmark"',
         },
       });
     const argv = await parser.argv;
@@ -198,12 +202,9 @@ if (require.main === module) {
         rateLimiter = new NoRateLimiter();
       }
 
-      model = new ChatModel(
-        argv.model,
-        argv.nrAttempts,
-        rateLimiter,
-        { max_tokens: argv.maxTokens }
-      );
+      model = new ChatModel(argv.model, argv.nrAttempts, rateLimiter, {
+        max_tokens: argv.maxTokens,
+      });
     } else {
       model = MockCompletionModel.fromFile(
         argv.responses,

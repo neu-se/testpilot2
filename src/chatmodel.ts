@@ -40,9 +40,11 @@ export class ChatModel implements ICompletionModel {
   ) {
     this.apiEndpoint = getEnv("TESTPILOT_LLM_API_ENDPOINT");
     this.authHeaders = getEnv("TESTPILOT_LLM_AUTH_HEADERS");
-    
+
     console.log(
-       `Using ${this.model} at ${this.apiEndpoint} with ${this.nrAttempts} attempts and ${this.rateLimiter.getDescription()}`
+      `Using ${this.model} at ${this.apiEndpoint} with ${
+        this.nrAttempts
+      } attempts and ${this.rateLimiter.getDescription()}`
     );
   }
 
@@ -77,7 +79,7 @@ export class ChatModel implements ICompletionModel {
       messages: [
         {
           role: "system",
-          content: "You are a programming assistant."
+          content: "You are a programming assistant.",
         },
         {
           role: "user",
@@ -94,7 +96,6 @@ export class ChatModel implements ICompletionModel {
         ),
       this.nrAttempts
     );
-    
 
     performance.measure(
       `llm-query:${JSON.stringify({

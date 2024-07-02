@@ -30,13 +30,12 @@ export async function retry<T>(
  * This interface provides supports for retrying the creation of a promise
  */
 export interface IRateLimiter {
-  
   /**
    * Waits until the rate limiter allows the next request, then evaluate the function that
    * produces the promise
    */
   next<T>(p: () => Promise<T>): Promise<T>;
-  
+
   /**
    * returns a description of the rate limiter
    */
