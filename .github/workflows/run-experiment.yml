@@ -31,7 +31,7 @@ on:
         default: false
       rateLimiting:
         type: boolean
-        description: "Use rate limiting for running benchmarks"
+        description: "Use rate limiting"
         default: false
       debug_enabled:
         type: boolean
