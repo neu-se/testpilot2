@@ -29,9 +29,9 @@ on:
         description: "Skip slow benchmarks"
         type: boolean
         default: false
-      benchmarkMode:
+      rateLimiting:
         type: boolean
-        description: "Use custom rate limiting for running benchmarks"
+        description: "Use rate limiting for running benchmarks"
         default: false
       debug_enabled:
         type: boolean
@@ -173,14 +173,26 @@ jobs:
           echo "Computing package statistics"
           node benchmark/package_stats.js "$TESTPILOT_PACKAGE_PATH" > stats.json
           echo "Generating tests for $TESTPILOT_PACKAGE_NAME"
-          export command="node benchmark/run.js \
+
+          if (${{ github.event.inputs.rateLimiting }}); then
+            export command="node benchmark/run.js \
             --outputDir $outputdir \
             --package "$TESTPILOT_PACKAGE_PATH" \
             --temperatures "${{ needs.setup.outputs.temperatures }}" \
             --model ${{ needs.setup.outputs.model }} \
             --template ${{ needs.setup.outputs.template }} \
             --retryTemplate ${{ needs.setup.outputs.retryTemplate }} \
-            --benchmark ${{ github.event.inputs.benchmarkMode }} " 
+            --rateLimit benchmark"
+          else
+            export command="node benchmark/run.js \
+            --outputDir $outputdir \
+            --package "$TESTPILOT_PACKAGE_PATH" \
+            --temperatures "${{ needs.setup.outputs.temperatures }}" \
+            --model ${{ needs.setup.outputs.model }} \
+            --template ${{ needs.setup.outputs.template }} \
+            --retryTemplate ${{ needs.setup.outputs.retryTemplate }}"
+          fi
+           
           echo "command: $command"
           $command
           mv stats.json $outputdir
