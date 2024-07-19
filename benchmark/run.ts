@@ -212,7 +212,7 @@ if (require.main === module) {
       );
     }
 
-    const packagePath = argv.package;
+    const packagePath = path.resolve(argv.package);
     const packageName = JSON.parse(
       fs.readFileSync(path.join(packagePath, "package.json"), "utf8")
     ).name;
